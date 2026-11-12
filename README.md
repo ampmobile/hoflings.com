@@ -52,9 +52,9 @@ The repository is the single source of truth for every host:
   `Murat9mega@gmail.com's Account` (account id `8b050f696532858f4cbb677da2940527`).
   Assigned nameservers `bethany.ns.cloudflare.com` and `damon.ns.cloudflare.com`;
   the registrar is Namecheap, where `dns1.registrar-servers.com` and
-  `dns2.registrar-servers.com` must be deleted and DNSSEC turned off.
-  The zone activates once the registrar change propagates; the `hoflings.com`
-  custom domain is attached to the Pages project after that.
+  `dns2.registrar-servers.com` were deleted and DNSSEC turned off. The zone is
+  active and `hoflings.com` and `www.hoflings.com` are attached to the Pages
+  project as proxied CNAMEs to `hoflings-com.pages.dev`.
   Existing mail records (privateemail.com MX/SRV, SPF TXT) were left untouched so
   mail keeps working across the nameserver change.
 - **Supabase** — project `hoflings.com` under `ammobile1111@gmail.com's Org`
