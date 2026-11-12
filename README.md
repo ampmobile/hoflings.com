@@ -39,12 +39,28 @@ server.js           dependency-free static server used by the host
 The repository is the single source of truth for every host:
 
 - **Railway** — project `hoflings.com`, service `hoflings.com`, source repo
-  `ampmobile/hoflings.com` (branch `main`, auto-deploy on push). Builds with
-  `npm ci --include=dev && npm run build`, starts with `npm start` on `$PORT`
-  (default 8080). The `--include=dev` flag is required because Railway builds with
-  `NODE_ENV=production`, which would otherwise strip Vite from `node_modules`.
-  Public domain: `hoflingscom-production.up.railway.app`.
-- **Cloudflare Pages** — build command `npm run build`, output directory `dist`.
+  `ampmobile/hoflings.com` (branch `main`, auto-deploy on push). Nixpacks runs the
+  install step with `NODE_ENV=development` (set in `railway.json`) so Vite is present,
+  and the build command is only `npm run build`. Running a second `npm ci` inside the
+  build command fails with `EBUSY` while npm removes `node_modules/.cache`, so the
+  install is left to Nixpacks. The runtime starts with `npm start` on `$PORT`
+  (default 8080). Public domain: `hoflingscom-production.up.railway.app`.
+- **Cloudflare Pages** — project `hoflings-com`, production branch `main`, build
+  command `npm run build`, output directory `dist`, `NODE_VERSION=22`.
+  Live at `hoflings-com.pages.dev` (Pages 308-redirects `.html` paths to extensionless).
+- **Cloudflare DNS** — zone `hoflings.com` (Free plan) in the
+  `Murat9mega@gmail.com's Account` (account id `8b050f696532858f4cbb677da2940527`).
+  Assigned nameservers `bethany.ns.cloudflare.com` and `damon.ns.cloudflare.com`;
+  the registrar is Namecheap, where `dns1.registrar-servers.com` and
+  `dns2.registrar-servers.com` must be deleted and DNSSEC turned off.
+  The zone activates once the registrar change propagates; the `hoflings.com`
+  custom domain is attached to the Pages project after that.
+  Existing mail records (privateemail.com MX/SRV, SPF TXT) were left untouched so
+  mail keeps working across the nameserver change.
+- **Supabase** — project `hoflings.com` under `ammobile1111@gmail.com's Org`
+  (org id `jvoyfwptndxjtlodllay`), project ref `wepbxrgugqctotczeamu`,
+  region `us-east-1`, API URL `https://wepbxrgugqctotczeamu.supabase.co`.
+  No GitHub repository is connected to it yet.
 - **Node** — pinned to 22 via `.node-version`.
 
 ## Content and sourcing
