@@ -38,8 +38,14 @@ server.js           dependency-free static server used by the host
 
 The repository is the single source of truth for every host:
 
-- **Railway** — builds with `npm ci && npm run build`, starts with `npm start`.
+- **Railway** — project `hoflings.com`, service `hoflings.com`, source repo
+  `ampmobile/hoflings.com` (branch `main`, auto-deploy on push). Builds with
+  `npm ci --include=dev && npm run build`, starts with `npm start` on `$PORT`
+  (default 8080). The `--include=dev` flag is required because Railway builds with
+  `NODE_ENV=production`, which would otherwise strip Vite from `node_modules`.
+  Public domain: `hoflingscom-production.up.railway.app`.
 - **Cloudflare Pages** — build command `npm run build`, output directory `dist`.
+- **Node** — pinned to 22 via `.node-version`.
 
 ## Content and sourcing
 
