@@ -460,10 +460,22 @@ export async function handleAuthLogin(request, env) {
     return json({ error: 'That is not the administrator address for this console. Check the address and try again.' }, 403);
   }
 
-  const res = await sb(env, '/auth/v1/token?grant_type=password', {
-    method: 'POST',
-    body: { email, password },
-  });
+  const token = async (addr) =>
+    sb(env, '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      body: { email: addr, password },
+    });
+
+  let res = await token(email);
+
+  // An allowed address may not have an account of its own — a second spelling
+  // of the same inbox, for instance. Fall back to the primary administrator
+  // account so the owner can sign in with either spelling.
+  if (!res.ok && admin.length > 1 && email !== admin[0]) {
+    const alt = await token(admin[0]);
+    if (alt.ok) res = alt;
+  }
+
   if (!res.ok) {
     return json({ error: 'That email and password did not work.' }, 401);
   }
