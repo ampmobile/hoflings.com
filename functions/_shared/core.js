@@ -427,7 +427,7 @@ export async function handleAuthLogin(request, env) {
 
   if (!email || !password) return json({ error: 'Email and password are both required.' }, 422);
   if (admin && email !== admin) {
-    return json({ error: 'This inbox is restricted to the site administrator.' }, 403);
+    return json({ error: 'That is not the administrator address for this console. Check the address and try again.' }, 403);
   }
 
   const res = await sb(env, '/auth/v1/token?grant_type=password', {
@@ -457,7 +457,7 @@ export async function handleAuthSignup(request, env) {
 
   if (!email || !password) return json({ error: 'Email and password are both required.' }, 422);
   if (admin && email !== admin) {
-    return json({ error: 'This inbox is restricted to the site administrator.' }, 403);
+    return json({ error: 'That is not the administrator address for this console. Check the address and try again.' }, 403);
   }
   if (password.length < 10) {
     return json({ error: 'Use a password of at least 10 characters.' }, 422);
@@ -518,7 +518,7 @@ export async function handleAuthForgot(request, env) {
 
   if (!email) return json({ error: 'Enter your email address.' }, 422);
   if (admin && email !== admin) {
-    return json({ error: 'This inbox is restricted to the site administrator.' }, 403);
+    return json({ error: 'That is not the administrator address for this console. Check the address and try again.' }, 403);
   }
 
   const site = String(env.PUBLIC_SITE_URL || '').replace(/\/+$/, '');
