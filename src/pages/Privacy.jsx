@@ -39,9 +39,22 @@ export default function Privacy() {
         <h3>When you visit this site</h3>
         <p>
           This website is a static marketing site. It does not run advertising trackers, does not set advertising cookies,
-          and does not build a behavioural profile of you. The enquiry form on the{' '}
-          <a href="/contact.html">contact page</a> opens your own email client with the details you typed. Nothing you type
-          into that form is transmitted to, stored on, or logged by this website.
+          and does not build a behavioural profile of you. The only thing the site collects is what you type into the
+          enquiry form on the <a href="/contact.html">contact page</a>, and that only because you asked us to come back to
+          you.
+        </p>
+        <p>Specifically, when you send an enquiry we collect:</p>
+        <ul>
+          <li>Your name, work email, company and phone number, if you give one.</li>
+          <li>The role you need filled, the region you operate in and your fleet or headcount range.</li>
+          <li>The message you write.</li>
+        </ul>
+        <p>
+          That enquiry is stored in our own database, reachable only by the people who answer it, and it is used for one
+          thing: getting back to you about the roles you asked about. We email it to our own inbox, and we send you a copy
+          so you have it too. We do not sell it, we do not share it with advertisers or data brokers, and we do not add you
+          to a mailing list because you filled in a form. We delete enquiries that have gone cold once they are no longer
+          needed to answer you. If you want yours removed, ask and it is gone — see below.
         </p>
 
         <h3>When you are a candidate or applicant</h3>
@@ -111,7 +124,9 @@ export default function Privacy() {
           </li>
           <li>
             <b>Service providers.</b> Hosting, telephony, messaging and e-signature providers that process data on our
-            instructions under written data processing terms.
+            instructions under written data processing terms. For enquiries sent through this site, that means our hosting
+            provider Cloudflare, our database provider Supabase, and our email provider SendGrid — each receives only what is
+            needed to store the enquiry or deliver the email.
           </li>
           <li>
             <b>Professional advisers and authorities.</b> Our counsel, accountants and auditors, and regulators or law
@@ -149,6 +164,10 @@ export default function Privacy() {
           </li>
           <li>
             <b>Commercial and billing records.</b> For the statutory accounting period.
+          </li>
+          <li>
+            <b>Enquiries sent through this website.</b> Until you are answered and the enquiry is closed, and then for a
+            reasonable period afterwards so we can keep the thread of the conversation. Ask us and we delete it sooner.
           </li>
         </ul>
         <p>

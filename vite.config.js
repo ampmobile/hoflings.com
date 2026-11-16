@@ -1,7 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const pages = ['index', 'services', 'platform', 'industries', 'hrbridge', 'about', 'contact', 'privacy', 'terms'];
+const pages = [
+  'index',
+  'services',
+  'platform',
+  'industries',
+  'hrbridge',
+  'about',
+  'contact',
+  'privacy',
+  'terms',
+  'auth',
+  'admin',
+];
 
 export default defineConfig({
   plugins: [react()],

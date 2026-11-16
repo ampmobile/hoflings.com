@@ -153,51 +153,106 @@ export function Faq({ items }) {
 
 /* --------------------------- Contact form --------------------------- */
 export function ContactForm() {
-  const [sent, setSent] = useState(false);
-  const submit = (e) => {
+  const [state, setState] = useState('idle'); // idle | sending | sent | error
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const submit = async (e) => {
     e.preventDefault();
     const form = e.currentTarget;
+
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
     }
+
     const d = new FormData(form);
-    const subject = `Hoflings enquiry — ${d.get('company') || 'New lead'}`;
-    const body = [];
-    d.forEach((v, k) => {
-      if (v) body.push(`${k.charAt(0).toUpperCase() + k.slice(1)}: ${v}`);
-    });
-    setSent(true);
-    window.location.href = `mailto:${BRAND.email}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body.join('\n'))}`;
+    const payload = {
+      name: d.get('name'),
+      email: d.get('email'),
+      company: d.get('company'),
+      phone: d.get('phone'),
+      role: d.get('role'),
+      region: d.get('region'),
+      fleet: d.get('fleet'),
+      message: d.get('message'),
+      website: d.get('website'), // honeypot — humans never see this
+      source: window.location.href,
+    };
+
+    setState('sending');
+    setError('');
+    setFieldErrors({});
+
+    try {
+      const res = await fetch('/contacts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        if (data && data.fields) setFieldErrors(data.fields);
+        throw new Error((data && data.error) || 'We could not send that. Please try again.');
+      }
+
+      setState('sent');
+      form.reset();
+    } catch (err) {
+      setError(err.message);
+      setState('error');
+    }
   };
 
+  const busy = state === 'sending';
+  const fieldError = (name) => (fieldErrors[name] ? <span className="field__err">{fieldErrors[name]}</span> : null);
+
   return (
-    <form className="panel panel--tick" onSubmit={submit} style={{ padding: 'clamp(24px, 2.8vw, 36px)' }}>
-      <div className={`ok${sent ? ' is-on' : ''}`}>
+    <form className="panel panel--tick" onSubmit={submit} style={{ padding: 'clamp(24px, 2.8vw, 36px)' }} noValidate>
+      <div className={`ok${state === 'sent' ? ' is-on' : ''}`}>
         <Icon name="check" />
         <div>
-          <b>Your email client is opening.</b>
-          <p>If nothing happens, write to {BRAND.email} and we will pick it up straight away.</p>
+          <b>Enquiry received.</b>
+          <p>
+            It is with our team now, and we have sent a copy to your inbox. A recruiter who knows the sector replies within
+            one business day.
+          </p>
         </div>
       </div>
+
+      {state === 'error' && (
+        <p className="form__error" role="alert">
+          {error} You can also email us directly at <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a>.
+        </p>
+      )}
 
       <div className="frow">
         <div className="field">
           <label htmlFor="f-name">Full name</label>
           <input id="f-name" name="name" type="text" autoComplete="name" placeholder="Jordan Reyes" required />
+          {fieldError('name')}
         </div>
         <div className="field">
           <label htmlFor="f-email">Work email</label>
           <input id="f-email" name="email" type="email" autoComplete="email" placeholder="jordan@company.com" required />
+          {fieldError('email')}
         </div>
       </div>
 
       <div className="frow">
         <div className="field">
           <label htmlFor="f-company">Company</label>
-          <input id="f-company" name="company" type="text" autoComplete="organization" placeholder="Ridgeline Freight LLC" required />
+          <input
+            id="f-company"
+            name="company"
+            type="text"
+            autoComplete="organization"
+            placeholder="Ridgeline Freight LLC"
+            required
+          />
+          {fieldError('company')}
         </div>
         <div className="field">
           <label htmlFor="f-phone">Phone (optional)</label>
@@ -262,16 +317,23 @@ export function ContactForm() {
           placeholder="We need six Class A drivers for dedicated runs out of Dallas, and every agency we try takes two weeks to send anyone…"
           required
         />
+        {fieldError('message')}
       </div>
 
-      <button className="btn btn--fill btn--block" type="submit">
-        Send and open my email client
+      <div className="hp" aria-hidden="true">
+        <label htmlFor="f-website">Website</label>
+        <input id="f-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
+
+      <button className="btn btn--fill btn--block" type="submit" disabled={busy}>
+        {busy ? 'Sending…' : state === 'sent' ? 'Send another enquiry' : 'Send enquiry'}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M5 12h14M13 6l6 6-6 6" />
         </svg>
       </button>
       <p className="fnote">
-        This form opens your email client with the details prefilled. Nothing you type is stored on this site.
+        Your details go straight to our enquiries inbox so we can reply, and a copy is emailed back to you. We do not sell or
+        share them — see the <a href="/privacy.html">privacy notice</a>.
       </p>
     </form>
   );

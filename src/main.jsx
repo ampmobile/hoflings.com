@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { initSmoothScroll } from './lib/motion.js';
 import { initTheme } from './lib/theme.js';
-import { Header, Footer, Chrome } from './components/Bits.jsx';
+import { Header, Footer, Chrome, ConsoleBar } from './components/Bits.jsx';
 import Home from './pages/Home.jsx';
 import Services from './pages/Services.jsx';
 import Platform from './pages/Platform.jsx';
@@ -12,6 +12,8 @@ import Contact from './pages/Contact.jsx';
 import HrBridge from './pages/HrBridge.jsx';
 import Privacy from './pages/Privacy.jsx';
 import Terms from './pages/Terms.jsx';
+import Auth from './pages/Auth.jsx';
+import Admin from './pages/Admin.jsx';
 import './styles/global.css';
 
 const PAGES = {
@@ -24,11 +26,17 @@ const PAGES = {
   hrbridge: HrBridge,
   privacy: Privacy,
   terms: Terms,
+  auth: Auth,
+  admin: Admin,
 };
+
+// The console pages are deliberately stripped of the marketing chrome.
+const CONSOLE = ['auth', 'admin'];
 
 function App() {
   const page = document.body.dataset.page || 'home';
   const Page = PAGES[page] || Home;
+  const consolePage = CONSOLE.includes(page);
 
   useEffect(() => {
     initSmoothScroll();
@@ -56,11 +64,11 @@ function App() {
         Skip to content
       </a>
       <Chrome />
-      <Header page={page} />
+      {consolePage ? <ConsoleBar /> : <Header page={page} />}
       <main id="main">
         <Page />
       </main>
-      <Footer />
+      {!consolePage && <Footer />}
     </>
   );
 }

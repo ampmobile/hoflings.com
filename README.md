@@ -77,3 +77,41 @@ The theme is stored in `localStorage` under `hof-theme` and follows the OS
 ## Legal
 
 Hoflings Ltd, 300 Main Street, Madison, NJ 07940. `support@hoflings.com`
+
+## Admin backend
+
+The site ships a small backend that runs on both hosts (Cloudflare Pages Functions
+and the Node host) from one shared core, `functions/_shared/core.js`. There are no
+new npm dependencies — Supabase and SendGrid are called with plain `fetch`.
+
+| Route | Method | Purpose |
+| --- | --- | --- |
+| `/contacts` | POST | Accept a site enquiry, store it, notify, auto-reply |
+| `/auth/login` | POST | Sign in, sets the `hof_admin` httpOnly cookie |
+| `/auth/signup` | POST | Create the admin account (admin email only) |
+| `/auth/logout` | POST | Clear the session |
+| `/auth/session` | GET | Current session state |
+| `/auth/forgot` | POST | Start a password reset |
+| `/auth/reset` | POST | Finish a password reset |
+| `/admin/contacts` | GET/PATCH/DELETE | Read, update and delete enquiries |
+
+- **Storage** — Supabase Postgres, table `public.contacts`. Row Level Security is
+  on; only the admin address may read. Inserts and deletes use the service role
+  key server-side only, so the browser never sees it.
+- **Auth** — Supabase Auth. The session is a Supabase access token stored in an
+  httpOnly cookie, so no token is ever exposed to page JavaScript.
+- **Email** — SendGrid REST API. Every new enquiry sends a notification to
+  `CONTACT_TO_EMAIL` and an auto-reply to the sender. If SendGrid fails the
+  enquiry is still saved and the request still succeeds; the row keeps
+  `notified = false` so it can be spotted later.
+
+Set the variables listed in `.env.example` on the host. `ADMIN_EMAIL` is the only
+address that may sign in or create an account.
+
+The signup route creates the account through the Supabase admin API rather than
+the public signup endpoint: the public endpoint sends a confirmation email, which
+burns the project's email rate limit and leaves the account unconfirmed.
+
+Password reset relies on Supabase's built-in email service, which on the free
+plan only sends to project members and is heavily rate-limited. Configure a
+custom SMTP provider for Supabase Auth before relying on `/auth/forgot`.

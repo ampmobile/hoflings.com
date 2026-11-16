@@ -203,6 +203,54 @@ export const Header = ({ page }) => {
 };
 
 /* ------------------------------------------------------------------ */
+/* Console bar — the slim header used by /auth and /admin              */
+/* ------------------------------------------------------------------ */
+
+export const ConsoleBar = () => {
+  const [theme, setTheme] = useState(getTheme);
+
+  useEffect(() => {
+    const onTheme = (e) => setTheme(e.detail.theme);
+    document.addEventListener('hof:theme', onTheme);
+    return () => document.removeEventListener('hof:theme', onTheme);
+  }, []);
+
+  const day = theme === 'day';
+
+  return (
+    <header className="hdr console">
+      <div className="wrap hdr__in">
+        <a className="logo" href="/" aria-label="Hoflings home">
+          <span className="logo__mark">
+            <LogoMark />
+          </span>
+          <span className="logo__type">
+            Hofling<span>s</span>
+          </span>
+        </a>
+        <span className="console__tag">Operations console</span>
+        <div className="hdr__act">
+          <button
+            className="theme-btn"
+            onClick={() => toggleTheme()}
+            aria-label={day ? 'Switch to night mode' : 'Switch to day mode'}
+            title={day ? 'Switch to night mode' : 'Switch to day mode'}
+            type="button"
+          >
+            <span className="theme-btn__i theme-btn__i--sun">
+              <Icon name="sun" />
+            </span>
+            <span className="theme-btn__i theme-btn__i--moon">
+              <Icon name="moon" />
+            </span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+/* ------------------------------------------------------------------ */
 /* Footer                                                               */
 /* ------------------------------------------------------------------ */
 
