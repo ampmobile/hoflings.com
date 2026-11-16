@@ -468,12 +468,17 @@ export async function handleAuthLogin(request, env) {
 
   let res = await token(email);
 
-  // An allowed address may not have an account of its own — a second spelling
-  // of the same inbox, for instance. Fall back to the primary administrator
-  // account so the owner can sign in with either spelling.
-  if (!res.ok && admin.length > 1 && email !== admin[0]) {
-    const alt = await token(admin[0]);
-    if (alt.ok) res = alt;
+  // Try the submitted address first, then every other allowed address. The
+  // owner may sign in with either spelling of the same inbox, and each
+  // allowed address can hold its own account — so either address works with
+  // whichever of those passwords they know.
+  for (const addr of admin) {
+    if (res.ok || addr === email) continue;
+    const alt = await token(addr);
+    if (alt.ok) {
+      res = alt;
+      break;
+    }
   }
 
   if (!res.ok) {
