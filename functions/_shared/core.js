@@ -59,6 +59,34 @@ export function cookieHeader(name, value, { maxAge, secure = true, httpOnly = tr
   return bits.join('; ');
 }
 
+/**
+ * ADMIN_EMAIL may hold a comma-separated list of administrator addresses.
+ * A list means one mistyped or browser-autofilled address can never lock the
+ * owner out of their own console.
+ */
+export function adminEmails(env) {
+  return String((env && env.ADMIN_EMAIL) || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** True when the address is on the administrator allow-list. */
+export function isAdminEmail(env, email) {
+  const list = adminEmails(env);
+  if (!list.length) return true; // no list configured: any account may sign in
+  return list.includes(String(email || '').trim().toLowerCase());
+}
+
+/** Recipients for site notifications (CONTACT_TO_EMAIL, else the admins). */
+export function notifyRecipients(env) {
+  const to = String((env && env.CONTACT_TO_EMAIL) || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return to.length ? to : adminEmails(env);
+}
+
 export async function readJson(request) {
   try {
     const text = await request.text();
@@ -206,13 +234,16 @@ export async function sendMail(env, { to, subject, text, html }) {
   if (!env.SENDGRID_API_KEY) {
     return { ok: false, error: 'SENDGRID_API_KEY is not configured on this host.' };
   }
-  if (!to) return { ok: false, error: 'No recipient.' };
+  const recipients = (Array.isArray(to) ? to : [to])
+    .map((v) => String(v || '').trim())
+    .filter(Boolean);
+  if (!recipients.length) return { ok: false, error: 'No recipient.' };
 
   const fromEmail = env.SENDGRID_FROM_EMAIL || 'support@hoflings.com';
   const fromName = env.SENDGRID_FROM_NAME || 'Hoflings';
 
   const payload = {
-    personalizations: [{ to: [{ email: to }], subject }],
+    personalizations: [{ to: recipients.map((email) => ({ email })), subject }],
     from: { email: fromEmail, name: fromName },
     reply_to: { email: env.CONTACT_REPLY_TO || fromEmail },
     content: [{ type: 'text/plain', value: text }],
@@ -259,7 +290,7 @@ const row = (label, value) =>
 
 /** Notify the site owner about a new lead, and acknowledge the visitor. */
 export async function notifyNewContact(env, contact) {
-  const to = env.CONTACT_TO_EMAIL || env.ADMIN_EMAIL;
+  const to = notifyRecipients(env);
   const stamp = new Date().toUTCString();
 
   const text = [
@@ -366,9 +397,8 @@ export async function getSessionUser(env, request) {
 
 export async function requireAdmin(env, request) {
   const user = await getSessionUser(env, request);
-  const admin = String(env.ADMIN_EMAIL || '').toLowerCase();
-  if (!user || !admin) return null;
-  if (String(user.email || '').toLowerCase() !== admin) return null;
+  if (!user) return null;
+  if (!isAdminEmail(env, user.email)) return null;
   return user;
 }
 
@@ -423,10 +453,10 @@ export async function handleAuthLogin(request, env) {
   const body = await readJson(request);
   const email = String(body?.email || '').trim().toLowerCase();
   const password = String(body?.password || '');
-  const admin = String(env.ADMIN_EMAIL || '').toLowerCase();
+  const admin = adminEmails(env);
 
   if (!email || !password) return json({ error: 'Email and password are both required.' }, 422);
-  if (admin && email !== admin) {
+  if (admin.length && !admin.includes(email)) {
     return json({ error: 'That is not the administrator address for this console. Check the address and try again.' }, 403);
   }
 
@@ -453,10 +483,10 @@ export async function handleAuthSignup(request, env) {
   const body = await readJson(request);
   const email = String(body?.email || '').trim().toLowerCase();
   const password = String(body?.password || '');
-  const admin = String(env.ADMIN_EMAIL || '').toLowerCase();
+  const admin = adminEmails(env);
 
   if (!email || !password) return json({ error: 'Email and password are both required.' }, 422);
-  if (admin && email !== admin) {
+  if (admin.length && !admin.includes(email)) {
     return json({ error: 'That is not the administrator address for this console. Check the address and try again.' }, 403);
   }
   if (password.length < 10) {
@@ -514,10 +544,10 @@ export async function handleAuthForgot(request, env) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
   const body = await readJson(request);
   const email = String(body?.email || '').trim().toLowerCase();
-  const admin = String(env.ADMIN_EMAIL || '').toLowerCase();
+  const admin = adminEmails(env);
 
   if (!email) return json({ error: 'Enter your email address.' }, 422);
-  if (admin && email !== admin) {
+  if (admin.length && !admin.includes(email)) {
     return json({ error: 'That is not the administrator address for this console. Check the address and try again.' }, 403);
   }
 

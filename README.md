@@ -106,7 +106,10 @@ new npm dependencies — Supabase and SendGrid are called with plain `fetch`.
   `notified = false` so it can be spotted later.
 
 Set the variables listed in `.env.example` on the host. `ADMIN_EMAIL` is the only
-address that may sign in or create an account.
+address that may sign in or create an account. It accepts a comma-separated
+allow-list (`you@gmail.com,alias@gmail.com`) so a mistyped or browser-autofilled
+address cannot lock the owner out; each listed address still needs its own
+confirmed account in Supabase Auth.
 
 The signup route creates the account through the Supabase admin API rather than
 the public signup endpoint: the public endpoint sends a confirmation email, which
