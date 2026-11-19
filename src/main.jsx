@@ -42,7 +42,7 @@ function App() {
     initSmoothScroll();
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-    // Respect deep links (/services.html#recruiting): land on the anchor
+    // Respect deep links (/services#recruiting): land on the anchor
     // instead of forcing the top of the page.
     const hash = window.location.hash.slice(1);
     if (hash) {

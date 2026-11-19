@@ -157,11 +157,11 @@ export default function About() {
               software.
             </p>
             <div className="band__act">
-              <Btn href="/contact.html">
+              <Btn href="/contact">
                 Start a conversation
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/services.html" variant="line">
+              <Btn href="/services" variant="line">
                 See our services
               </Btn>
             </div>

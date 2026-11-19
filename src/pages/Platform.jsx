@@ -106,7 +106,7 @@ export default function Platform() {
                 <li><span>Data handled deliberately: role-based access, retention controls, export and deletion on request</span></li>
               </ul>
               <div style={{ marginTop: 26 }}>
-                <Btn href="/contact.html" variant="line">
+                <Btn href="/contact" variant="line">
                   Ask about explainability
                   <Icon name="arrow" />
                 </Btn>
@@ -236,11 +236,11 @@ export default function Platform() {
             </h2>
             <p>Thirty minutes, your role, your questions — including the ones about how decisions actually get made.</p>
             <div className="band__act">
-              <Btn href="/contact.html">
+              <Btn href="/contact">
                 Book a demo
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/services.html" variant="line">
+              <Btn href="/services" variant="line">
                 See the services
               </Btn>
             </div>

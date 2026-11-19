@@ -181,10 +181,10 @@ export const Header = ({ page }) => {
               <Icon name="moon" />
             </span>
           </button>
-          <a className="btn btn--line btn--sm" href="/contact.html">
+          <a className="btn btn--line btn--sm" href="/contact">
             Talk to us
           </a>
-          <a className="btn btn--fill btn--sm" href="/contact.html">
+          <a className="btn btn--fill btn--sm" href="/contact">
             Book a demo
           </a>
           <button
@@ -297,39 +297,39 @@ export const Footer = () => (
         <div>
           <h6>Services</h6>
           <ul>
-            <li><a href="/services.html#recruiting">AI recruiting</a></li>
-            <li><a href="/services.html#onboarding">AI onboarding</a></li>
-            <li><a href="/services.html#hr">HR services</a></li>
-            <li><a href="/services.html#pricing">Engagement models</a></li>
+            <li><a href="/services#recruiting">AI recruiting</a></li>
+            <li><a href="/services#onboarding">AI onboarding</a></li>
+            <li><a href="/services#hr">HR services</a></li>
+            <li><a href="/services#pricing">Engagement models</a></li>
           </ul>
         </div>
         <div>
           <h6>Industries</h6>
           <ul>
-            <li><a href="/industries.html#trucking">Trucking &amp; intermodal</a></li>
-            <li><a href="/industries.html#dsp">DSP &amp; delivery</a></li>
-            <li><a href="/industries.html#warehouse">Warehousing &amp; 3PL</a></li>
-            <li><a href="/industries.html#crossborder">Cross-border</a></li>
+            <li><a href="/industries#trucking">Trucking &amp; intermodal</a></li>
+            <li><a href="/industries#dsp">DSP &amp; delivery</a></li>
+            <li><a href="/industries#warehouse">Warehousing &amp; 3PL</a></li>
+            <li><a href="/industries#crossborder">Cross-border</a></li>
           </ul>
         </div>
         <div>
           <h6>Company</h6>
           <ul>
-            <li><a href="/about.html">About</a></li>
-            <li><a href="/platform.html">Platform</a></li>
-            <li><a href="/hrbridge.html">HRBridge</a></li>
-            <li><a href="/contact.html">Contact</a></li>
-            <li><a href="/contact.html#demo">Book a demo</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/platform">Platform</a></li>
+            <li><a href="/hrbridge">HRBridge</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/contact#demo">Book a demo</a></li>
           </ul>
         </div>
       </div>
       <div className="ftr__bot">
         <span>© {new Date().getFullYear()} {BRAND.legalName}. All rights reserved.</span>
         <div>
-          <a href="/about.html">Method</a>
-          <a href="/privacy.html">Privacy</a>
-          <a href="/terms.html">Terms</a>
-          <a href="/contact.html">Accessibility</a>
+          <a href="/about">Method</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/contact">Accessibility</a>
         </div>
       </div>
     </div>
@@ -452,9 +452,17 @@ export const Headline = ({ lines, className = '' }) => {
   return (
     <h1 ref={ref} className={className}>
       {lines.map((l, i) => (
-        <span className="rv-line" key={i}>
-          <span dangerouslySetInnerHTML={{ __html: l }} />
-        </span>
+        <React.Fragment key={i}>
+          <span className="rv-line">
+            <span dangerouslySetInnerHTML={{ __html: l }} />
+          </span>
+          {/* The line wrappers are block-level for the masked reveal, so the
+              heading text would otherwise read as "driversyour" to crawlers
+              and screen readers. This space is whitespace-only between block
+              boxes: it collapses away visually and separates the words in
+              the text. */}
+          {' '}
+        </React.Fragment>
       ))}
     </h1>
   );

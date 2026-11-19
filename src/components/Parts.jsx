@@ -333,7 +333,7 @@ export function ContactForm() {
       </button>
       <p className="fnote">
         Your details go straight to our enquiries inbox so we can reply, and a copy is emailed back to you. We do not sell or
-        share them — see the <a href="/privacy.html">privacy notice</a>.
+        share them — see the <a href="/privacy">privacy notice</a>.
       </p>
     </form>
   );

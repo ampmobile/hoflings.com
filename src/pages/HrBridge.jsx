@@ -68,7 +68,7 @@ export default function HrBridge() {
               Visit {HRBRIDGE.name}.app
               <Icon name="arrow" />
             </Btn>
-            <Btn href="/contact.html" variant="line">
+            <Btn href="/contact" variant="line">
               Talk to Hoflings
             </Btn>
           </div>
@@ -171,7 +171,7 @@ export default function HrBridge() {
               See plans and pricing on {HRBRIDGE.domain}
               <Icon name="arrow" />
             </Btn>
-            <Btn href="/contact.html" variant="line">
+            <Btn href="/contact" variant="line">
               Ask Hoflings about a fleet rollout
             </Btn>
           </div>
@@ -223,7 +223,7 @@ export default function HrBridge() {
                   <a className="pill" href={HRBRIDGE.url} target="_blank" rel="noopener noreferrer">
                     {HRBRIDGE.domain}
                   </a>
-                  <a className="pill" href="/contact.html">
+                  <a className="pill" href="/contact">
                     {BRAND.email}
                   </a>
                 </div>
@@ -248,7 +248,7 @@ export default function HrBridge() {
                 Visit {HRBRIDGE.domain}
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/contact.html" variant="line">
+              <Btn href="/contact" variant="line">
                 Talk to us
               </Btn>
             </div>

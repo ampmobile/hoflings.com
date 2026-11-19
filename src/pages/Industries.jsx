@@ -108,7 +108,7 @@ export default function Industries() {
                 <li><span>One named advisor who knows both sides of the border</span></li>
               </ul>
               <div style={{ marginTop: 28 }}>
-                <Btn href="/contact.html" variant="line">
+                <Btn href="/contact" variant="line">
                   Talk about a cross-border fleet
                   <Icon name="arrow" />
                 </Btn>
@@ -153,11 +153,11 @@ export default function Industries() {
               segment, in your states and provinces.
             </p>
             <div className="band__act">
-              <Btn href="/contact.html">
+              <Btn href="/contact">
                 Talk to us
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/services.html" variant="line">
+              <Btn href="/services" variant="line">
                 See our services
               </Btn>
             </div>

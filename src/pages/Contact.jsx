@@ -211,7 +211,7 @@ export default function Contact() {
                 Start a conversation
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/services.html" variant="line">
+              <Btn href="/services" variant="line">
                 See our services
               </Btn>
             </div>

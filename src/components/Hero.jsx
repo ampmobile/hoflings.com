@@ -100,11 +100,11 @@ export default function Hero() {
             </p>
 
             <div className="hero__act">
-              <Btn href="/contact.html">
+              <Btn href="/contact">
                 Book a 30-minute walkthrough
                 <IconArrow />
               </Btn>
-              <Btn href="/services.html" variant="line">
+              <Btn href="/services" variant="line">
                 See how hiring works
               </Btn>
             </div>

@@ -164,7 +164,7 @@ export default function Services() {
                 </div>
                 <Points items={p.points} />
                 <div style={{ marginTop: 26 }}>
-                  <Btn href="/contact.html" variant={p.featured ? 'fill' : 'line'} size="sm" magnetic={false}>
+                  <Btn href="/contact" variant={p.featured ? 'fill' : 'line'} size="sm" magnetic={false}>
                     Get a quote
                   </Btn>
                 </div>
@@ -190,7 +190,7 @@ export default function Services() {
                 audit dates — is dated, owned and escalated. These are the 2026 changes it absorbs for you.
               </p>
               <div style={{ marginTop: 24 }}>
-                <Btn href="/contact.html" variant="line">
+                <Btn href="/contact" variant="line">
                   Ask about your jurisdiction
                   <Icon name="arrow" />
                 </Btn>
@@ -235,11 +235,11 @@ export default function Services() {
               before we talk about a contract.
             </p>
             <div className="band__act">
-              <Btn href="/contact.html">
+              <Btn href="/contact">
                 Book a demo
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/platform.html" variant="line">
+              <Btn href="/platform" variant="line">
                 Explore the platform
               </Btn>
             </div>

@@ -57,7 +57,7 @@ export const LegalPage = ({ crumb, kicker, title, lede, updated, children, aside
                 </div>
               </div>
               <div style={{ marginTop: 20 }}>
-                <Btn href="/contact.html" variant="line" size="sm">
+                <Btn href="/contact" variant="line" size="sm">
                   Contact us
                   <Icon name="arrow" />
                 </Btn>
@@ -71,17 +71,17 @@ export const LegalPage = ({ crumb, kicker, title, lede, updated, children, aside
               <ul className="panel__list" style={{ marginTop: 14 }}>
                 <li>
                   <span>
-                    <a href="/terms.html">Terms of Service</a>
+                    <a href="/terms">Terms of Service</a>
                   </span>
                 </li>
                 <li>
                   <span>
-                    <a href="/privacy.html">Privacy Policy</a>
+                    <a href="/privacy">Privacy Policy</a>
                   </span>
                 </li>
                 <li>
                   <span>
-                    <a href="/about.html">About Hoflings</a>
+                    <a href="/about">About Hoflings</a>
                   </span>
                 </li>
                 <li>

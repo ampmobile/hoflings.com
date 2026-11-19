@@ -28,12 +28,12 @@ export const HRBRIDGE = {
 };
 
 export const NAV = [
-  { label: 'Services', href: '/services.html', key: 'services' },
-  { label: 'Platform', href: '/platform.html', key: 'platform' },
-  { label: 'Industries', href: '/industries.html', key: 'industries' },
-  { label: 'HRBridge', href: '/hrbridge.html', key: 'hrbridge' },
-  { label: 'About', href: '/about.html', key: 'about' },
-  { label: 'Contact', href: '/contact.html', key: 'contact' },
+  { label: 'Services', href: '/services', key: 'services' },
+  { label: 'Platform', href: '/platform', key: 'platform' },
+  { label: 'Industries', href: '/industries', key: 'industries' },
+  { label: 'HRBridge', href: '/hrbridge', key: 'hrbridge' },
+  { label: 'About', href: '/about', key: 'about' },
+  { label: 'Contact', href: '/contact', key: 'contact' },
 ];
 
 /* ------------------------------------------------------------------ */

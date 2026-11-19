@@ -40,7 +40,7 @@ export default function Privacy() {
         <p>
           This website is a static marketing site. It does not run advertising trackers, does not set advertising cookies,
           and does not build a behavioural profile of you. The only thing the site collects is what you type into the
-          enquiry form on the <a href="/contact.html">contact page</a>, and that only because you asked us to come back to
+          enquiry form on the <a href="/contact">contact page</a>, and that only because you asked us to come back to
           you.
         </p>
         <p>Specifically, when you send an enquiry we collect:</p>

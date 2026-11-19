@@ -141,7 +141,7 @@ export default function Terms() {
           </li>
         </ul>
         <p>
-          Our handling of personal information is described in the <a href="/privacy.html">Privacy Policy</a>.
+          Our handling of personal information is described in the <a href="/privacy">Privacy Policy</a>.
         </p>
       </LegalSection>
 
@@ -269,7 +269,7 @@ export default function Terms() {
         </p>
         <p>
           Questions about these Terms can be sent to that address. To start a commercial conversation, use the{' '}
-          <a href="/contact.html">contact page</a> or book a walkthrough.
+          <a href="/contact">contact page</a> or book a walkthrough.
         </p>
       </LegalSection>
     </LegalPage>

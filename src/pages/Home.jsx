@@ -55,11 +55,11 @@ export default function Home() {
             <h2>Automation runs the process. Your team runs the decision.</h2>
             <p>{AUTOMATION.scope}</p>
             <div className="band__act">
-              <Btn href="/services.html">
+              <Btn href="/services">
                 See how the automation works
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/contact.html" variant="line">
+              <Btn href="/contact" variant="line">
                 Run a live requisition through it
               </Btn>
             </div>
@@ -190,7 +190,7 @@ export default function Home() {
                 <p>{s.body}</p>
                 <Bullet>{s.points}</Bullet>
                 <div style={{ marginTop: 24 }}>
-                  <Btn href={`/services.html#${s.key}`} variant="line" size="sm">
+                  <Btn href={`/services#${s.key}`} variant="line" size="sm">
                     Explore {s.title.toLowerCase()}
                   </Btn>
                 </div>
@@ -379,7 +379,7 @@ export default function Home() {
             ))}
           </Reveal>
           <div style={{ marginTop: 32, textAlign: 'center' }}>
-            <Btn href="/platform.html" variant="line">
+            <Btn href="/platform" variant="line">
               Explore the platform
               <Icon name="arrow" />
             </Btn>
@@ -408,7 +408,7 @@ export default function Home() {
                 answer when something goes wrong. They are two ways to buy the same capability.
               </p>
               <div className="band__act" style={{ marginTop: 30 }}>
-                <Btn href="/hrbridge.html">
+                <Btn href="/hrbridge">
                   See {HRBRIDGE.name}
                   <Icon name="arrow" />
                 </Btn>
@@ -478,7 +478,7 @@ export default function Home() {
                   ))}
                 </ul>
                 <div style={{ marginTop: 20 }}>
-                  <Btn href="/contact.html#sources" variant="line" size="sm">
+                  <Btn href="/contact#sources" variant="line" size="sm">
                     See all sources
                   </Btn>
                 </div>
@@ -506,11 +506,11 @@ export default function Home() {
               no commitment, no pilot deck, and no discovery phase billed as consulting.
             </p>
             <div className="band__act">
-              <Btn href="/contact.html">
+              <Btn href="/contact">
                 Book a 30-minute walkthrough
                 <Icon name="arrow" />
               </Btn>
-              <Btn href="/services.html" variant="line">
+              <Btn href="/services" variant="line">
                 See how hiring works
               </Btn>
             </div>
