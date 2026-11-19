@@ -1,13 +1,12 @@
 # hoflings.com — https://hoflings.com
-# Everything under / is crawlable. The operations console and the API routes
-# are not: they carry noindex already, and the API is not meant to be indexed.
+# Everything under / is crawlable. The operations console (/auth, /admin) is
+# excluded from the sitemap and carries noindex, nofollow in its own markup —
+# it is deliberately NOT disallowed here, because a crawler that cannot fetch
+# a page cannot read its noindex tag and may keep the URL indexed anyway.
+# The API is not a page and is not meant to be crawled.
 
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /admin/
-Disallow: /auth
-Disallow: /auth/
 Disallow: /contacts
 
 Sitemap: https://hoflings.com/sitemap.xml
