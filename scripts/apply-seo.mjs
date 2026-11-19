@@ -40,7 +40,7 @@ const PAGES = [
     slug: 'index',
     path: '/',
     crumb: 'Home',
-    title: 'Hoflings — AI Recruiting, Onboarding & HR for Transportation',
+    title: 'Hoflings — AI Recruiting & HR for Transportation',
     description:
       'Fully automated AI recruiting and onboarding for US and Canadian trucking, freight and delivery operators — from the first résumé to the qualification file.',
     imageAlt: 'Hoflings — AI recruiting and onboarding for the freight economy',
@@ -50,7 +50,7 @@ const PAGES = [
     slug: 'services',
     path: '/services',
     crumb: 'Services',
-    title: 'Services — Recruiting, Onboarding & HR for Transportation',
+    title: 'Recruiting, Onboarding & HR Services for Transportation',
     description:
       'Fully automated AI recruiting, onboarding and HR services for transportation employers — priced against unfilled trucks and compliance, not software seats.',
     imageAlt: 'Hoflings services — recruiting, onboarding and HR for transportation',
@@ -110,7 +110,7 @@ const PAGES = [
     slug: 'about',
     path: '/about',
     crumb: 'About',
-    title: 'About Hoflings — AI hiring for transportation & logistics',
+    title: 'About Hoflings — AI hiring for transportation',
     description:
       'Hoflings was built for the hiring problems of freight operators: driver scarcity, qualification files and compliance that spans two countries.',
     imageAlt: 'About Hoflings — AI hiring for transportation and logistics',
@@ -316,32 +316,50 @@ ${FONTS}
 </head>`;
 }
 
-/** Replace the existing <head>...</head> block, leaving the rest of the file alone. */
+/**
+ * Replace the existing <head>...</head> block, leaving the rest of the file alone.
+ *
+ * The match is tested first rather than by comparing strings afterwards:
+ * `String.replace` returns the input unchanged when the head is already
+ * correct, so an equality check cannot tell "no head block" from "already
+ * up to date" and made a second `npm run seo` fail on a clean tree.
+ */
+const HEAD_BLOCK = /<head>[\s\S]*?<\/head>/;
+
 async function rewrite(file, head) {
   const path = resolve(ROOT, file);
   const html = await readFile(path, 'utf8');
-  const next = html.replace(/<head>[\s\S]*?<\/head>/, head);
-  if (next === html) throw new Error(`${file}: no <head> block found`);
-  await writeFile(path, next, 'utf8');
+  if (!HEAD_BLOCK.test(html)) throw new Error(`${file}: no <head> block found`);
+  await writeFile(path, html.replace(HEAD_BLOCK, head), 'utf8');
 }
 
-/** Guard rails: truncated titles and descriptions are a real loss of clicks. */
+/**
+ * Guard rails: truncated titles and descriptions are a real loss of clicks.
+ *
+ * The length that matters is the one a crawler reads, which is the ESCAPED
+ * string: "&" becomes "&amp;" and costs four characters in the rendered head.
+ * Measuring the raw source string let three titles through at 61-64 rendered
+ * characters, past the point where Google truncates the title in results.
+ */
 function validate(page) {
   const problems = [];
-  if (page.title.length > 60) problems.push(`title ${page.title.length} chars (>60)`);
-  if (page.title.length < 25) problems.push(`title ${page.title.length} chars (<25)`);
-  if (page.description.length < 140) problems.push(`description ${page.description.length} chars (<140)`);
-  if (page.description.length > 160) problems.push(`description ${page.description.length} chars (>160)`);
+  const title = esc(page.title).length;
+  const description = esc(page.description).length;
+  if (title > 60) problems.push(`title ${title} chars rendered (>60)`);
+  if (title < 25) problems.push(`title ${title} chars rendered (<25)`);
+  if (description < 140) problems.push(`description ${description} chars rendered (<140)`);
+  if (description > 160) problems.push(`description ${description} chars rendered (>160)`);
   if (problems.length) {
     throw new Error(`${page.slug}: ${problems.join('; ')}`);
   }
+  return { title, description };
 }
 
 for (const page of PAGES) {
-  validate(page);
+  const len = validate(page);
   await rewrite(`${page.slug}.html`, publicHead(page));
   console.log(
-    `seo: ${page.slug.padEnd(10)} t=${String(page.title.length).padStart(2)} d=${String(page.description.length).padStart(3)}  ${ORIGIN}${page.path}`
+    `seo: ${page.slug.padEnd(10)} t=${String(len.title).padStart(2)} d=${String(len.description).padStart(3)}  ${ORIGIN}${page.path}`
   );
 }
 
