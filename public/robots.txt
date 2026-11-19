@@ -1,0 +1,13 @@
+# hoflings.com — https://hoflings.com
+# Everything under / is crawlable. The operations console and the API routes
+# are not: they carry noindex already, and the API is not meant to be indexed.
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /contacts
+
+Sitemap: https://hoflings.com/sitemap.xml

@@ -185,6 +185,15 @@ const server = http.createServer(async (req, res) => {
     return res.end('Method Not Allowed');
   }
 
+  // `/hrbridge.html` -> `/hrbridge`, matching Cloudflare Pages. One canonical
+  // URL per page: the extensionless form is what the canonical tags and the
+  // sitemap point at.
+  if (pathname.endsWith('.html')) {
+    const pretty = pathname.slice(0, -'.html'.length) || '/';
+    res.writeHead(301, { Location: pretty, ...SECURITY });
+    return res.end('Moved Permanently');
+  }
+
   const file = await resolveFile(req.url || '/');
   if (!file) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', ...SECURITY });
