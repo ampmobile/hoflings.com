@@ -40,7 +40,7 @@ const PAGES = [
     slug: 'index',
     path: '/',
     crumb: 'Home',
-    title: 'Hoflings — AI Recruiting & HR for Transportation',
+    title: 'Hoflings — AI Recruiting, Onboarding & HR for Transportation',
     description:
       'Fully automated AI recruiting and onboarding for US and Canadian trucking, freight and delivery operators — from the first résumé to the qualification file.',
     imageAlt: 'Hoflings — AI recruiting and onboarding for the freight economy',
@@ -50,7 +50,7 @@ const PAGES = [
     slug: 'services',
     path: '/services',
     crumb: 'Services',
-    title: 'Recruiting, Onboarding & HR Services for Transportation',
+    title: 'Services — Recruiting, Onboarding & HR for Transportation',
     description:
       'Fully automated AI recruiting, onboarding and HR services for transportation employers — priced against unfilled trucks and compliance, not software seats.',
     imageAlt: 'Hoflings services — recruiting, onboarding and HR for transportation',
@@ -110,7 +110,7 @@ const PAGES = [
     slug: 'about',
     path: '/about',
     crumb: 'About',
-    title: 'About Hoflings — AI hiring for transportation',
+    title: 'About Hoflings — AI hiring for transportation & logistics',
     description:
       'Hoflings was built for the hiring problems of freight operators: driver scarcity, qualification files and compliance that spans two countries.',
     imageAlt: 'About Hoflings — AI hiring for transportation and logistics',
@@ -191,6 +191,14 @@ const esc = (s) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+
+/** The text a crawler reads back out of the markup, entities resolved. */
+const decodeEntities = (s) =>
+  String(s)
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"');
 
 function jsonLd(page) {
   const canonical = `${ORIGIN}${page.path}`;
@@ -336,15 +344,17 @@ async function rewrite(file, head) {
 /**
  * Guard rails: truncated titles and descriptions are a real loss of clicks.
  *
- * The length that matters is the one a crawler reads, which is the ESCAPED
- * string: "&" becomes "&amp;" and costs four characters in the rendered head.
- * Measuring the raw source string let three titles through at 61-64 rendered
- * characters, past the point where Google truncates the title in results.
+ * The length that matters is the DECODED length — what a crawler parses out
+ * of the markup and a reader sees on the results page. HTML entities are
+ * decoded before that, so "&" costs one character of the title, not the five
+ * characters "&amp;" takes up in the source file. Counting the escaped
+ * source string instead would wrongly fail a title of "Services —
+ * Recruiting, Onboarding & HR" that renders at 57 characters.
  */
 function validate(page) {
   const problems = [];
-  const title = esc(page.title).length;
-  const description = esc(page.description).length;
+  const title = decodeEntities(page.title).length;
+  const description = decodeEntities(page.description).length;
   if (title > 60) problems.push(`title ${title} chars rendered (>60)`);
   if (title < 25) problems.push(`title ${title} chars rendered (<25)`);
   if (description < 140) problems.push(`description ${description} chars rendered (<140)`);
