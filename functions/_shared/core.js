@@ -226,7 +226,7 @@ export async function insertContact(env, contact, request, leadContext) {
 export async function listContacts(env) {
   const res = await sb(
     env,
-    `/rest/v1/${CONTACT_TABLE}?select=*&order=created_at.desc&limit=500`,
+    `/rest/v1/${CONTACT_TABLE}?select=*,replies:contact_replies(id,contact_id,created_at,sent_at,sender_admin,from_email,to_email,subject,body,status,error)&order=created_at.desc&replies.order=created_at.asc&limit=500`,
     { service: true }
   );
   if (!res.ok) return { ok: false, error: res.data?.message || `query failed (${res.status})` };
@@ -260,7 +260,7 @@ export async function deleteContact(env, id) {
 
 /* -------------------------------- sendgrid ------------------------------ */
 
-export async function sendMail(env, { to, subject, text, html }) {
+export async function sendMail(env, { to, subject, text, html, fromEmail: senderEmail, replyTo }) {
   if (!env.SENDGRID_API_KEY) {
     return { ok: false, error: 'SENDGRID_API_KEY is not configured on this host.' };
   }
@@ -269,13 +269,13 @@ export async function sendMail(env, { to, subject, text, html }) {
     .filter(Boolean);
   if (!recipients.length) return { ok: false, error: 'No recipient.' };
 
-  const fromEmail = env.SENDGRID_FROM_EMAIL || 'support@hoflings.com';
+  const fromEmail = senderEmail || env.SENDGRID_FROM_EMAIL || 'support@hoflings.com';
   const fromName = env.SENDGRID_FROM_NAME || 'Hoflings';
 
   const payload = {
     personalizations: [{ to: recipients.map((email) => ({ email })), subject }],
     from: { email: fromEmail, name: fromName },
-    reply_to: { email: env.CONTACT_REPLY_TO || fromEmail },
+    reply_to: { email: replyTo || env.CONTACT_REPLY_TO || fromEmail },
     content: [{ type: 'text/plain', value: text }],
   };
   if (html) payload.content.push({ type: 'text/html', value: html });
@@ -291,14 +291,14 @@ export async function sendMail(env, { to, subject, text, html }) {
       body: JSON.stringify(payload),
     });
   } catch (err) {
-    return { ok: false, error: `SendGrid request failed: ${err?.message || err}` };
+    return { ok: false, uncertain: true, error: `SendGrid request failed: ${err?.message || err}` };
   }
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    return { ok: false, error: `SendGrid ${res.status}: ${detail.slice(0, 300)}` };
+    return { ok: false, uncertain: res.status >= 500, error: `SendGrid ${res.status}: ${detail.slice(0, 300)}` };
   }
-  return { ok: true };
+  return { ok: true, messageId: res.headers.get('x-message-id') || null };
 }
 
 function esc(v) {
@@ -634,6 +634,87 @@ export async function handleAuthReset(request, env) {
 }
 
 const CONTACT_STATUSES = ['new', 'contacted', 'archived'];
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+async function getReply(env, id) {
+  const result = await sb(env, `/rest/v1/contact_replies?id=eq.${encodeURIComponent(id)}&select=*&limit=1`, { service: true });
+  return { ok: result.ok, row: Array.isArray(result.data) ? result.data[0] : null };
+}
+
+function existingReplyResponse(reply, input) {
+  if (reply.contact_id !== input.contact_id || reply.subject !== input.subject || reply.body !== input.body)
+    return json({ error: 'This send request was already used for a different message. Refresh the inquiry before continuing.' }, 409);
+  if (reply.status === 'sent') return json({ ok: true, reply, replayed: true, notice: 'This reply was already accepted by SendGrid. It was not sent again.' });
+  if (reply.status === 'failed') return json({ error: 'SendGrid rejected the previous attempt. You can try sending again.', retryable: true }, 502);
+  return json({ error: 'The previous send is still processing or its outcome is uncertain. It will not be sent again. Refresh the inquiry or check SendGrid before starting another reply.', pending: true }, 409);
+}
+
+export async function handleAdminContactReply(request, env) {
+  const user = await requireAdmin(env, request);
+  if (!user) return json({ error: 'Not signed in.' }, 401);
+  if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
+  const origin = request.headers.get('origin');
+  if ((origin && origin !== new URL(request.url).origin) || request.headers.get('sec-fetch-site') === 'cross-site')
+    return json({ error: 'Reply requests must come from the Hoflings admin inbox.' }, 403);
+  const raw = await readJson(request);
+  const input = {
+    request_id: typeof raw?.request_id === 'string' ? raw.request_id : '',
+    contact_id: typeof raw?.contact_id === 'string' ? raw.contact_id : '',
+    subject: typeof raw?.subject === 'string' ? raw.subject.trim() : '',
+    body: typeof raw?.body === 'string' ? raw.body.trim() : '',
+  };
+  if (!UUID_RE.test(input.contact_id) || !UUID_RE.test(input.request_id)) return json({ error: 'Invalid inquiry or send request.' }, 422);
+  if (!input.subject || input.subject.length > 200 || /[\r\n]/.test(input.subject))
+    return json({ error: 'Enter a subject of 1–200 characters on one line.' }, 422);
+  if (!input.body || input.body.length > 12000) return json({ error: 'Enter a reply of 1–12,000 characters.' }, 422);
+  if (!rateLimit(`admin-reply:${user.email}`, { limit: 30, windowMs: 60000 }))
+    return json({ error: 'Too many reply requests. Please wait a minute.' }, 429);
+  const previous = await getReply(env, input.request_id);
+  if (!previous.ok) return json({ error: 'Could not check the send history. Nothing was sent.' }, 503);
+  if (previous.row) return existingReplyResponse(previous.row, input);
+  const contactResult = await sb(env, `/rest/v1/${CONTACT_TABLE}?id=eq.${encodeURIComponent(input.contact_id)}&select=id,name,email,status&limit=1`, { service: true });
+  if (!contactResult.ok) return json({ error: 'Could not load the inquiry. Nothing was sent.' }, 503);
+  const contact = Array.isArray(contactResult.data) ? contactResult.data[0] : null;
+  if (!contact) return json({ error: 'This inquiry no longer exists.' }, 404);
+  if (!EMAIL_RE.test(contact.email)) return json({ error: 'This inquiry does not have a valid recipient email.' }, 422);
+  if (!env.SENDGRID_API_KEY) return json({ error: 'Email sending is not configured. Nothing was sent.' }, 503);
+  const row = {
+    id: input.request_id, contact_id: input.contact_id, subject: input.subject, body: input.body,
+    sender_admin: user.email, from_email: 'support@hoflings.com', to_email: contact.email, status: 'sending',
+  };
+  const inserted = await sb(env, '/rest/v1/contact_replies', {
+    method: 'POST', body: row, service: true, headers: { Prefer: 'return=representation' },
+  });
+  if (!inserted.ok) {
+    // A concurrent request may have claimed this send ID. Never send without a durable claim.
+    const claimed = await getReply(env, input.request_id);
+    if (claimed.ok && claimed.row) return existingReplyResponse(claimed.row, input);
+    return json({ error: 'Could not save the reply before sending. Nothing was sent.' }, 503);
+  }
+  const stored = Array.isArray(inserted.data) ? inserted.data[0] : row;
+  const mail = await sendMail(env, {
+    to: contact.email, subject: input.subject, text: input.body,
+    fromEmail: 'support@hoflings.com', replyTo: 'support@hoflings.com',
+    html: `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.7;color:#17202c"><p style="white-space:pre-wrap">${esc(input.body)}</p><p style="margin-top:28px;color:#687383">Hoflings Ltd<br>support@hoflings.com</p></div>`,
+  });
+  const sentAt = new Date().toISOString();
+  const patch = mail.ok ? { status: 'sent', sent_at: sentAt, provider_message_id: mail.messageId, error: null }
+    : { status: mail.uncertain ? 'unknown' : 'failed', error: mail.error.slice(0, 500) };
+  const saved = await sb(env, `/rest/v1/contact_replies?id=eq.${encodeURIComponent(row.id)}`, {
+    method: 'PATCH', body: patch, service: true, headers: { Prefer: 'return=representation' },
+  });
+  if (!mail.ok) return json({ error: mail.uncertain
+    ? 'The connection to SendGrid was interrupted. The message may have been accepted. Do not resend until its status is checked.'
+    : 'SendGrid rejected the reply. Check the sending configuration and try again.',
+    pending: Boolean(mail.uncertain) || !saved.ok, retryable: !mail.uncertain && saved.ok,
+  }, 502);
+  const updated = await updateContact(env, contact.id, { status: 'contacted' });
+  const reply = Array.isArray(saved.data) && saved.data[0] ? saved.data[0] : { ...stored, ...patch };
+  return json({ ok: true, reply, contact_status: updated.ok ? 'contacted' : contact.status,
+    notice: saved.ok ? 'Reply accepted by SendGrid.' : 'Reply accepted by SendGrid, but saving the final history status failed. Do not resend; refresh or check SendGrid.',
+  });
+}
 
 export async function handleAdminContacts(request, env) {
   const user = await requireAdmin(env, request);

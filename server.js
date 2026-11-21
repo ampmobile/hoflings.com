@@ -22,6 +22,7 @@ import {
   handleAuthForgot,
   handleAuthReset,
   handleAdminContacts,
+  handleAdminContactReply,
 } from './functions/_shared/core.js';
 
 const ROOT = resolve(fileURLToPath(new URL('./dist', import.meta.url)));
@@ -121,6 +122,7 @@ const API_ROUTES = {
   '/auth/forgot': handleAuthForgot,
   '/auth/reset': handleAuthReset,
   '/admin/contacts': handleAdminContacts,
+  '/admin/contact-replies': handleAdminContactReply,
 };
 
 function apiHandler(pathname) {

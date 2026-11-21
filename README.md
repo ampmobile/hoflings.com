@@ -128,6 +128,14 @@ The signup route creates the account through the Supabase admin API rather than
 the public signup endpoint: the public endpoint sends a confirmation email, which
 burns the project's email rate limit and leaves the account unconfirmed.
 
+Admins can open an inline reply composer in an enquiry and send through `POST /admin/contact-replies`.
+The authenticated API loads the recipient from the enquiry, fixes From and Reply-To to `support@hoflings.com`,
+and records the message in the backend-only `public.contact_replies` table before contacting SendGrid.
+A stable request UUID prevents double-clicks and retries from sending the same reply twice. Successful SendGrid
+acceptance marks the enquiry contacted and appears in reply history; it is not a delivery receipt. Uncertain sends
+are held for review instead of automatically retried. RLS with no public/authenticated grants intentionally keeps
+reply bodies available only through the admin API. No inbound email synchronization is implemented.
+
 Password reset relies on Supabase's built-in email service, which on the free
 plan only sends to project members and is heavily rate-limited. Configure a
 custom SMTP provider for Supabase Auth before relying on `/auth/forgot`.

@@ -87,6 +87,27 @@ function InquiryContext({ contact: c }) {
   );
 }
 
+function ReplyHistory({ replies }) {
+  if (!replies?.length) return null;
+  return (
+    <section className="admin__replies" aria-label="Reply history">
+      <h3>Reply history</h3>
+      {replies.map(reply => (
+        <article className="admin__replyrecord" key={reply.id}>
+          <div className="admin__replymeta">
+            <b>{reply.subject}</b>
+            <span>{reply.status === 'sent' ? 'Accepted by SendGrid' : reply.status === 'failed' ? 'Not sent — rejected' : 'Send outcome not confirmed'}</span>
+          </div>
+          <p className="admin__replyaddresses">From {reply.from_email} · To {reply.to_email}<br />
+            {fmtDate(reply.sent_at || reply.created_at)} · Admin: {reply.sender_admin}</p>
+          <p className="admin__replybody">{reply.body}</p>
+          {reply.status !== 'sent' && <p className="auth__msg auth__msg--bad">{reply.status === 'failed' ? 'SendGrid rejected this attempt.' : 'Check SendGrid before resending this message.'}</p>}
+        </article>
+      ))}
+    </section>
+  );
+}
+
 /**
  * The enquiries inbox — mounted at /admin.
  *
@@ -100,6 +121,46 @@ export default function Admin() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(null);
   const [error, setError] = useState('');
+  const [replying, setReplying] = useState(null);
+  const [drafts, setDrafts] = useState({});
+  const [replyStates, setReplyStates] = useState({});
+
+  const startReply = (contact) => {
+    setReplyStates(current => current[contact.id]?.notice ? { ...current, [contact.id]: {} } : current);
+    setDrafts(current => current[contact.id] ? current : {
+      ...current,
+      [contact.id]: { request_id: crypto.randomUUID(), subject: `Re: your Hoflings enquiry${contact.company ? ` — ${contact.company}` : ''}`.slice(0, 200), body: '' },
+    });
+    setReplying(current => current === contact.id ? null : contact.id);
+  };
+
+  const editDraft = (id, key, value) => setDrafts(current => ({ ...current, [id]: { ...current[id], [key]: value } }));
+
+  const sendReply = async (event, contact) => {
+    event.preventDefault();
+    if (replyStates[contact.id]?.busy) return;
+    const draft = drafts[contact.id];
+    if (!draft) return;
+    setReplyStates(current => ({ ...current, [contact.id]: { busy: true } }));
+    const { ok, data, status } = await api('/admin/contact-replies', {
+      method: 'POST', body: { ...draft, contact_id: contact.id },
+    });
+    if (ok && data?.ok && data.reply) {
+      setContacts(current => current.map(c => c.id === contact.id ? {
+        ...c, status: data.contact_status || c.status,
+        replies: [...(c.replies || []).filter(reply => reply.id !== data.reply.id), data.reply],
+      } : c));
+      setReplyStates(current => ({ ...current, [contact.id]: { notice: data.notice || 'Reply accepted by SendGrid.' } }));
+      setDrafts(current => { const next = { ...current }; delete next[contact.id]; return next; });
+      setReplying(current => current === contact.id ? null : current);
+      return;
+    }
+    if (data?.retryable) setDrafts(current => ({ ...current, [contact.id]: { ...current[contact.id], request_id: crypto.randomUUID() } }));
+    setReplyStates(current => ({ ...current, [contact.id]: {
+      error: data?.error || 'Could not confirm the send. Check its status before sending another reply.',
+      pending: Boolean(data?.pending) || status === 0 || Boolean(replyStates[contact.id]?.pending && !data?.retryable),
+    } }));
+  };
 
   const load = async () => {
     const { ok, data } = await api('/admin/contacts');
@@ -326,6 +387,8 @@ export default function Admin() {
 
                     <p className="admin__message">{c.message}</p>
 
+                    <ReplyHistory replies={c.replies} />
+
                     <InquiryContext contact={c} />
 
                     <div className="admin__foot">
@@ -342,16 +405,39 @@ export default function Admin() {
                         ))}
                       </div>
                       <div className="admin__rowactions">
-                        <a className="btn btn--line" href={`mailto:${c.email}?subject=${encodeURIComponent(
-                          `Re: your Hoflings enquiry — ${c.company}`
-                        )}`}>
-                          Reply
-                        </a>
-                        <button className="btn btn--line admin__del" type="button" onClick={() => remove(c.id)}>
+                        <button className="btn btn--line" type="button" onClick={() => startReply(c)}
+                          aria-expanded={replying === c.id} aria-controls={`reply-${c.id}`}>
+                          {replying === c.id ? 'Close reply' : 'Reply'}
+                        </button>
+                        <button className="btn btn--line admin__del" type="button" disabled={replyStates[c.id]?.busy} onClick={() => remove(c.id)}>
                           Delete
                         </button>
                       </div>
                     </div>
+                    {replyStates[c.id]?.notice && <p className="admin__replynotice" role="status">{replyStates[c.id].notice}</p>}
+                    {replying === c.id && drafts[c.id] && (
+                      <form id={`reply-${c.id}`} className="admin__replycomposer" onSubmit={event => sendReply(event, c)}>
+                        <h3>Reply to {c.name}</h3>
+                        <p className="admin__replyaddresses">From <b>support@hoflings.com</b> · To <b>{c.email}</b></p>
+                        <label htmlFor={`reply-subject-${c.id}`}>Subject</label>
+                        <input id={`reply-subject-${c.id}`} required maxLength={200} value={drafts[c.id].subject}
+                          disabled={replyStates[c.id]?.busy || replyStates[c.id]?.pending}
+                          onChange={event => editDraft(c.id, 'subject', event.target.value)} />
+                        <label htmlFor={`reply-body-${c.id}`}>Your reply</label>
+                        <textarea id={`reply-body-${c.id}`} required maxLength={12000} rows={7} autoFocus
+                          placeholder="Type your reply…" value={drafts[c.id].body}
+                          disabled={replyStates[c.id]?.busy || replyStates[c.id]?.pending}
+                          onChange={event => editDraft(c.id, 'body', event.target.value)} />
+                        {replyStates[c.id]?.error && <p className="auth__msg auth__msg--bad" role="alert">{replyStates[c.id].error}</p>}
+                        <div className="admin__replyactions">
+                          <button className="btn btn--fill" type="submit" disabled={replyStates[c.id]?.busy}>
+                            {replyStates[c.id]?.busy ? 'Sending…' : replyStates[c.id]?.pending ? 'Check send status' : 'Send reply'}
+                          </button>
+                          <button className="btn btn--line" type="button" disabled={replyStates[c.id]?.busy} onClick={() => setReplying(null)}>Close</button>
+                          <span>Sent replies appear in this inquiry’s history.</span>
+                        </div>
+                      </form>
+                    )}
                   </div>
                 )}
               </li>
