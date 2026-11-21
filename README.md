@@ -154,3 +154,11 @@ instructions and Undo restores them after a successful replacement. Sending rema
 Password reset relies on Supabase's built-in email service, which on the free
 plan only sends to project members and is heavily rate-limited. Configure a
 custom SMTP provider for Supabase Auth before relying on `/auth/forgot`.
+
+### Admin two-factor login
+
+`/auth` now requires Supabase TOTP MFA (compatible with Google Authenticator). After a password sign-in, new administrators scan a QR code and verify its six-digit code before opening the inbox. Existing enrolled administrators enter their authenticator code. The first-factor cookie is HTTP-only and lasts ten minutes; verification replaces it with the Supabase AAL2 session. Every admin API validates the session with Supabase and requires AAL2. Restrictive database policies also protect inquiry and reply access.
+
+Authenticator setup secrets are shown only during enrollment, are never logged, and responses are not cached. Abandoned unverified enrollments can be restarted; verified factors cannot be removed through this endpoint. If an administrator loses access to their authenticator, the project owner must verify their identity and reset that user's MFA factor through Supabase Auth administration. Password reset alone does not bypass MFA.
+
+Both main-site inquiries and Mac Studio quote requests notify `support@hoflings.com` through the existing SendGrid integration, alongside configured notification recipients, with duplicate addresses removed.

@@ -80,13 +80,13 @@ export function isAdminEmail(env, email) {
   return list.includes(String(email || '').trim().toLowerCase());
 }
 
-/** Recipients for site notifications (CONTACT_TO_EMAIL, else the admins). */
+/** Keep existing notification recipients and always include the support inbox once. */
 export function notifyRecipients(env) {
   const to = String((env && env.CONTACT_TO_EMAIL) || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  return to.length ? to : adminEmails(env);
+  return [...new Set([...(to.length ? to : adminEmails(env)).map(email => email.toLowerCase()), 'support@hoflings.com'])];
 }
 
 export async function readJson(request) {
@@ -426,10 +426,19 @@ export async function getSessionUser(env, request) {
   return res.data;
 }
 
+// Only inspect claims after getSessionUser has validated this exact token with Supabase.
+export function sessionHasMfa(request) {
+  try {
+    const token = parseCookies(request)[SESSION_COOKIE];
+    const encoded = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, '='))).aal === 'aal2';
+  } catch { return false; }
+}
+
 export async function requireAdmin(env, request) {
   const user = await getSessionUser(env, request);
   if (!user) return null;
-  if (!isAdminEmail(env, user.email)) return null;
+  if (!isAdminEmail(env, user.email) || !sessionHasMfa(request)) return null;
   return user;
 }
 
@@ -484,6 +493,8 @@ export const handleRentalQuoteCreate = (request, env) =>
 
 export async function handleAuthLogin(request, env) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
+  if ((request.headers.get('origin') && request.headers.get('origin') !== new URL(request.url).origin) || request.headers.get('sec-fetch-site') === 'cross-site') return json({ error: 'Sign in from the Hoflings website.' }, 403);
+  if (!rateLimit(`login:${clientIp(request)}`, { limit: 10, windowMs: 60000 })) return json({ error: 'Too many sign-in attempts. Wait a minute and try again.' }, 429);
   const body = await readJson(request);
   const email = String(body?.email || '').trim().toLowerCase();
   const password = String(body?.password || '');
@@ -522,15 +533,17 @@ export async function handleAuthLogin(request, env) {
   const { access_token, expires_in, user } = res.data || {};
   const headers = {
     'set-cookie': cookieHeader(SESSION_COOKIE, access_token, {
-      maxAge: Number(expires_in) || 3600,
+      maxAge: 600,
       secure: isHttps(request),
     }),
   };
-  return json({ ok: true, email: user?.email || email }, 200, headers);
+  return json({ ok: true, email: user?.email || email, mfa_required: true }, 200, { ...headers, 'cache-control': 'no-store' });
 }
 
 export async function handleAuthSignup(request, env) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
+  if ((request.headers.get('origin') && request.headers.get('origin') !== new URL(request.url).origin) || request.headers.get('sec-fetch-site') === 'cross-site') return json({ error: 'Sign in from the Hoflings website.' }, 403);
+  if (!rateLimit(`login:${clientIp(request)}`, { limit: 10, windowMs: 60000 })) return json({ error: 'Too many sign-in attempts. Wait a minute and try again.' }, 429);
   const body = await readJson(request);
   const email = String(body?.email || '').trim().toLowerCase();
   const password = String(body?.password || '');
@@ -571,11 +584,11 @@ export async function handleAuthSignup(request, env) {
   }
   const headers = {
     'set-cookie': cookieHeader(SESSION_COOKIE, access_token, {
-      maxAge: Number(expires_in) || 3600,
+      maxAge: 600,
       secure: isHttps(request),
     }),
   };
-  return json({ ok: true, email }, 200, headers);
+  return json({ ok: true, email, mfa_required: true }, 200, { ...headers, 'cache-control': 'no-store' });
 }
 
 export async function handleAuthLogout(request, env) {
@@ -587,8 +600,8 @@ export async function handleAuthLogout(request, env) {
 
 export async function handleAuthSession(request, env) {
   const user = await getSessionUser(env, request);
-  if (!user) return json({ authenticated: false }, 200);
-  return json({ authenticated: true, email: user.email }, 200);
+  if (!user || !isAdminEmail(env, user.email)) return json({ authenticated: false }, 200, { 'cache-control': 'no-store' });
+  return json({ authenticated: sessionHasMfa(request), mfa_required: !sessionHasMfa(request), email: user.email }, 200, { 'cache-control': 'no-store' });
 }
 
 export async function handleAuthForgot(request, env) {

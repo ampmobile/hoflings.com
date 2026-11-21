@@ -47,6 +47,7 @@ test('rental requests use the existing contacts storage and both notification em
     assert.equal(insert.options.headers.apikey, 'test-only');
     const emails = calls.filter(c => c.url.includes('sendgrid'));
     assert.equal(emails.length, 2);
+    assert.deepEqual(emails[0].body.personalizations[0].to.map(item => item.email), ['owner@example.com', 'support@hoflings.com']);
     assert.match(emails[0].body.personalizations[0].subject, /Mac Studio rental quote/);
     assert.equal(emails[1].body.personalizations[0].to[0].email, payload.email);
     assert.match(JSON.stringify(emails[1].body.content), /No rental is booked/);

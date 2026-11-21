@@ -1156,3 +1156,9 @@ h1, h2, h3, h4, h5, p, li, dt, dd, label, blockquote, figcaption,
 
 /* the sign-in card sits centred in the viewport */
 .auth { display: grid; place-items: center; min-height: min(78vh, 760px); }
+
+.auth__qr { display: block; width: 240px; max-width: 100%; height: auto; margin: 20px auto; padding: 12px; background: white; border-radius: 8px; }
+.auth__mfa { margin-bottom: 20px; }
+.auth__mfa p { margin: 16px 0; font-size: 14px; color: var(--muted); line-height: 1.6; }
+.auth__secret { display: block; overflow-wrap: anywhere; padding: 12px; margin: 12px 0; background: var(--void); }
+.auth__mfa summary { cursor: pointer; }

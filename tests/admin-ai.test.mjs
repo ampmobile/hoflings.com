@@ -6,7 +6,7 @@ const KEY = 'sk-synthetic-only-not-a-real-api-key';
 const ID = '93a8aa87-ae5d-48f2-95a5-8e8af0174519';
 let sequence = 0;
 const req = (path, data, { signed = true, origin = 'https://hoflings.com', method = data === undefined ? 'GET' : 'POST' } = {}) => new Request(`https://hoflings.com${path}`, {
-  method, headers: { origin, ...(signed ? { cookie: 'hof_admin=qa-session' } : {}), ...(data === undefined ? {} : { 'content-type': 'application/json' }) },
+  method, headers: { origin, ...(signed ? { cookie: 'hof_admin=eyJhbGciOiJ0ZXN0In0.eyJhYWwiOiJhYWwyIn0.synthetic' } : {}), ...(data === undefined ? {} : { 'content-type': 'application/json' }) },
   ...(data === undefined ? {} : { body: JSON.stringify(data) }),
 });
 

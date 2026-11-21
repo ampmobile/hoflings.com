@@ -9,6 +9,7 @@
  * (see `functions/_shared/core.js`), so both hosts answer identically.
  */
 import http from 'node:http';
+import { handleAuthMfa } from './functions/_shared/mfa.js';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -116,6 +117,7 @@ async function resolveFile(urlPath) {
 const API_ROUTES = {
   '/contacts': handleContactCreate,
   '/rental-quotes': handleRentalQuoteCreate,
+  '/auth/mfa': handleAuthMfa,
   '/auth/login': handleAuthLogin,
   '/auth/signup': handleAuthSignup,
   '/auth/logout': handleAuthLogout,

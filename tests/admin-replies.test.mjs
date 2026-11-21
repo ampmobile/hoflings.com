@@ -7,7 +7,7 @@ const sendId = '0ed52cd9-a8d8-45c8-8a61-d9217b3bba9b';
 const input = { contact_id: contactId, request_id: sendId, subject: 'Re: your inquiry', body: 'Hello, we can help. <script>literal text</script>', to: 'ignored@example.com', from: 'ignored@example.com' };
 let sequence = 0;
 const request = (data = input, { signedIn = true, origin = 'https://hoflings.com' } = {}) => new Request('https://hoflings.com/admin/contact-replies', {
-  method: 'POST', headers: { 'content-type': 'application/json', origin, ...(signedIn ? { cookie: 'hof_admin=test-session' } : {}) },
+  method: 'POST', headers: { 'content-type': 'application/json', origin, ...(signedIn ? { cookie: 'hof_admin=eyJhbGciOiJ0ZXN0In0.eyJhYWwiOiJhYWwyIn0.synthetic' } : {}) },
   body: JSON.stringify(data),
 });
 
