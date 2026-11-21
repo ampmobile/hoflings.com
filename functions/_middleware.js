@@ -15,6 +15,8 @@ export async function onRequest(context) {
     url.pathname = '/';
     return Response.redirect(url, 301);
   }
+  // Let the existing Pages Functions backend handle rental submissions.
+  if (url.pathname === '/rental-quotes') return context.next();
   url.pathname = `/mac-studio${url.pathname}`;
   return context.env.ASSETS.fetch(new Request(url, context.request));
 }

@@ -14,6 +14,7 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   handleContactCreate,
+  handleRentalQuoteCreate,
   handleAuthLogin,
   handleAuthSignup,
   handleAuthLogout,
@@ -112,6 +113,7 @@ async function resolveFile(urlPath) {
 
 const API_ROUTES = {
   '/contacts': handleContactCreate,
+  '/rental-quotes': handleRentalQuoteCreate,
   '/auth/login': handleAuthLogin,
   '/auth/signup': handleAuthSignup,
   '/auth/logout': handleAuthLogout,

@@ -157,7 +157,7 @@ export { sb as supabase };
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
 
-export function validateContact(input) {
+export function validateContact(input, { requireCompany = true } = {}) {
   const src = input && typeof input === 'object' ? input : {};
   const field = (v, max) => (typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, max) : '');
 
@@ -176,10 +176,31 @@ export function validateContact(input) {
   const errors = {};
   if (!value.name) errors.name = 'Tell us your name.';
   if (!EMAIL_RE.test(value.email)) errors.email = 'Enter a valid work email.';
-  if (!value.company) errors.company = 'Tell us the company.';
+  if (requireCompany && !value.company) errors.company = 'Tell us the company.';
   if (value.message.length < 10) errors.message = 'Add a little more detail so we can help.';
 
   return { ok: Object.keys(errors).length === 0, value, errors };
+}
+
+export function validateRentalQuote(input) {
+  const src = input && typeof input === 'object' ? input : {};
+  const configuration = ['64GB (provisional rate)', '96GB', '256GB', '512GB'].includes(src.configuration)
+    ? src.configuration : '';
+  const period = ['Hourly', 'Monthly — 15% off'].includes(src.period) ? src.period : '';
+  const workload = typeof src.workload === 'string' ? src.workload.trim() : '';
+  const result = validateContact({
+    name: src.name,
+    email: src.email,
+    company: src.company,
+    source: 'mac-studio.hoflings.com',
+    message: `Mac Studio rental quote\nConfiguration: ${configuration}\nRental period: ${period}\n\nWorkload, SSD capacity & preferred dates:\n${workload.slice(0, 3500)}`,
+  }, { requireCompany: false });
+  if (!configuration) result.errors.configuration = 'Choose a valid memory configuration.';
+  if (!period) result.errors.period = 'Choose an hourly or monthly rental.';
+  if (workload.length < 10) result.errors.workload = 'Add at least 10 characters about your workload, storage or dates.';
+  if (workload.length > 3500) result.errors.workload = 'Keep your rental details under 3,500 characters.';
+  result.ok = Object.keys(result.errors).length === 0;
+  return result;
 }
 
 export async function insertContact(env, contact, request) {
@@ -292,9 +313,14 @@ const row = (label, value) =>
 export async function notifyNewContact(env, contact) {
   const to = notifyRecipients(env);
   const stamp = new Date().toUTCString();
+  const rental = contact.source === 'mac-studio.hoflings.com';
+  const enquiryLabel = rental ? 'Mac Studio rental quote' : contact.company;
+  const acknowledgement = rental
+    ? `Thanks for requesting a Mac Studio rental quote. Your request is with our team. We will contact you at ${contact.email} to confirm availability, hardware and pricing. No rental is booked until the details are agreed.`
+    : `Thanks for contacting Hoflings about ${contact.company}. Your enquiry is with our team and a recruiter will come back to you at ${contact.email} within 48 hours.`;
 
   const text = [
-    `New enquiry — ${contact.company}`,
+    `New enquiry — ${enquiryLabel}`,
     '',
     `Name:    ${contact.name}`,
     `Email:   ${contact.email}`,
@@ -315,7 +341,7 @@ export async function notifyNewContact(env, contact) {
 <table role="presentation" cellpadding="0" cellspacing="0" style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #e3e6ea;border-radius:10px">
 <tr><td style="padding:22px 24px 8px">
 <p style="margin:0 0 4px;color:#b8791a;font:12px/1.4 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase">Hoflings · New enquiry</p>
-<h1 style="margin:0;font:600 20px/1.3 -apple-system,Segoe UI,sans-serif;color:#0b0e14">${esc(contact.company)}</h1>
+<h1 style="margin:0;font:600 20px/1.3 -apple-system,Segoe UI,sans-serif;color:#0b0e14">${esc(enquiryLabel)}</h1>
 </td></tr>
 <tr><td style="padding:8px 24px 18px">
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%">
@@ -340,18 +366,18 @@ ${row('Fleet', contact.fleet)}
 
   const admin = await sendMail(env, {
     to,
-    subject: `New Hoflings enquiry — ${contact.company}`,
+    subject: `New Hoflings enquiry — ${enquiryLabel}`,
     text,
     html,
   });
 
   const reply = await sendMail(env, {
     to: contact.email,
-    subject: 'We received your Hoflings enquiry',
+    subject: rental ? 'We received your Mac Studio rental request' : 'We received your Hoflings enquiry',
     text: [
       `Hi ${contact.name},`,
       '',
-      `Thanks for contacting Hoflings about ${contact.company}. Your enquiry is with our team and a recruiter will come back to you at ${contact.email} within 48 hours.`,
+      acknowledgement,
       '',
       'For reference, this is what you sent us:',
       '',
@@ -369,11 +395,7 @@ ${row('Fleet', contact.fleet)}
 </td></tr>
 <tr><td style="padding:8px 24px 18px;color:#3b4252;font:14px/1.65 -apple-system,Segoe UI,sans-serif">
 <p style="margin:0 0 12px">Hi ${esc(contact.name)},</p>
-<p style="margin:0 0 12px">Thanks for contacting Hoflings about ${esc(
-      contact.company
-    )}. Your enquiry is with our team and a recruiter will come back to you at ${esc(
-      contact.email
-    )} within 48 hours.</p>
+<p style="margin:0 0 12px">${esc(acknowledgement)}</p>
 <p style="margin:0 0 12px;color:#7b8494;font:12px/1.5 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase">What you sent us</p>
 <p style="margin:0 0 18px;padding:14px 16px;background:#f7f8fa;border-left:3px solid #FFB41F;border-radius:0 8px 8px 0;color:#141821;font:14px/1.6 -apple-system,Segoe UI,sans-serif;white-space:pre-wrap">${esc(
       contact.message
@@ -404,7 +426,7 @@ export async function requireAdmin(env, request) {
 
 /* ------------------------------- handlers ------------------------------- */
 
-export async function handleContactCreate(request, env) {
+export async function handleContactCreate(request, env, { validate = validateContact } = {}) {
   if (request.method === 'OPTIONS') {
     return json({}, 204, { allow: 'POST, OPTIONS' });
   }
@@ -423,7 +445,7 @@ export async function handleContactCreate(request, env) {
     return json({ ok: true });
   }
 
-  const { ok, value, errors } = validateContact(body);
+  const { ok, value, errors } = validate(body);
   if (!ok) {
     return json({ error: 'Please check the highlighted fields.', fields: errors }, 422);
   }
@@ -447,6 +469,9 @@ export async function handleContactCreate(request, env) {
 
   return json({ ok: true, id: inserted.row?.id || null, notified: mail.admin.ok });
 }
+
+export const handleRentalQuoteCreate = (request, env) =>
+  handleContactCreate(request, env, { validate: validateRentalQuote });
 
 export async function handleAuthLogin(request, env) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });

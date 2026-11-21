@@ -7,5 +7,50 @@ function calculate(){const rate=rates[document.querySelector('#memory').value],h
 document.querySelector('#memory').addEventListener('change',calculate);document.querySelector('#hours').addEventListener('input',calculate);
 document.querySelector('#theme').addEventListener('click',()=>{const light=document.body.classList.toggle('light');document.querySelector('#theme').setAttribute('aria-label',light?'Switch to dark mode':'Switch to light mode');});
 document.querySelector('#copy-ssh').addEventListener('click',async e=>{try{await navigator.clipboard.writeText(document.querySelector('#ssh-command').textContent);e.target.textContent='Copied';}catch{e.target.textContent='Select the command to copy';}});
-document.querySelector('#request-form').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.currentTarget);const body=`Name: ${d.get('name')}\nEmail: ${d.get('email')}\nConfiguration: ${d.get('configuration')}\nPeriod: ${d.get('period')}\n\nWorkload / storage / dates:\n${d.get('workload')}\n\nPlease confirm exact hardware, availability, final pricing, access, and data retention terms.`;window.location.href=`mailto:support@hoflings.com?subject=${encodeURIComponent('Mac Studio rental quote — '+d.get('configuration'))}&body=${encodeURIComponent(body)}`;document.querySelector('#form-status').textContent='Email draft prepared. Review and send it in your email app. If it did not open, contact support@hoflings.com.';});
+document.querySelector('#request-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  if (form.dataset.submitting === 'true') return;
+  const button = form.querySelector('[type="submit"]');
+  const status = document.querySelector('#form-status');
+  const values = Object.fromEntries(new FormData(form));
+  form.dataset.submitting = 'true';
+  form.setAttribute('aria-busy', 'true');
+  button.disabled = true;
+  button.textContent = 'Sending…';
+  status.textContent = '';
+  status.classList.remove('error');
+  form.querySelectorAll('[aria-invalid]').forEach(field => field.removeAttribute('aria-invalid'));
+  try {
+    const response = await fetch('/rental-quotes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      if (result.fields) {
+        for (const name of Object.keys(result.fields)) {
+          const field = form.elements.namedItem(name);
+          if (field) field.setAttribute('aria-invalid', 'true');
+        }
+      }
+      throw new Error(result.fields ? Object.values(result.fields).join(' ') : result.error || 'We could not send your request. Please try again.');
+    }
+    form.reset();
+    status.textContent = 'Your rental request has been received. The Hoflings team will contact you to confirm availability, hardware and pricing.';
+    button.textContent = 'Request received ✓';
+  } catch (error) {
+    status.classList.add('error');
+    status.textContent = error instanceof TypeError || error instanceof SyntaxError
+      ? 'Connection interrupted. Please try again, or email support@hoflings.com.'
+      : error.message;
+    button.innerHTML = 'Send rental request <span>↗</span>';
+  } finally {
+    form.dataset.submitting = 'false';
+    form.removeAttribute('aria-busy');
+    button.disabled = false;
+    status.focus({ preventScroll: true });
+  }
+});
 renderPlans();calculate();
