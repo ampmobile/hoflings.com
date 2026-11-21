@@ -17,6 +17,15 @@ export async function onRequest(context) {
   }
   // Let the existing Pages Functions backend handle rental submissions.
   if (url.pathname === '/rental-quotes') return context.next();
+  if (url.pathname === '/.well-known/cloudmac.json') {
+    url.pathname = '/mac-studio/cloudmac.json';
+    const asset = await context.env.ASSETS.fetch(new Request(url, context.request));
+    const response = new Response(asset.body, asset);
+    response.headers.set('content-type', 'application/json; charset=utf-8');
+    response.headers.set('access-control-allow-origin', '*');
+    response.headers.set('cache-control', 'public, max-age=300');
+    return response;
+  }
   url.pathname = `/mac-studio${url.pathname}`;
   return context.env.ASSETS.fetch(new Request(url, context.request));
 }

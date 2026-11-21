@@ -1,0 +1,121 @@
+{
+  "version": "1",
+  "updated_at": "2026-11-21",
+  "provider": {
+    "name": "Hoflings",
+    "website": "https://mac-studio.hoflings.com/",
+    "contact": {
+      "email": "support@hoflings.com"
+    }
+  },
+  "offers": [
+    {
+      "id": "mac-studio-m5-ultra-96gb-4tb",
+      "name": "Mac Studio M5 Ultra 96GB",
+      "service_type": "dedicated",
+      "hardware": {
+        "family": "mac-studio",
+        "chip": "Apple M5 Ultra",
+        "ram_gb": 96,
+        "storage_gb": 4000
+      },
+      "locations": [
+        {
+          "country": "US"
+        }
+      ],
+      "access": {
+        "ssh": true
+      },
+      "prices": [
+        {
+          "amount": 2.0,
+          "currency": "USD",
+          "period": "hour",
+          "note": "Dedicated Mac Studio rental by inquiry. Exact hardware, storage and availability are confirmed with the quote."
+        },
+        {
+          "amount": 1241.0,
+          "currency": "USD",
+          "period": "month",
+          "min_term_months": 1,
+          "note": "Monthly reservation: hourly rate × 730 hours, less 15%. 4TB SSD baseline; larger SSD capacity and any applicable taxes or additional charges are confirmed in the quote."
+        }
+      ],
+      "stock": "unknown",
+      "url": "https://mac-studio.hoflings.com/#request"
+    },
+    {
+      "id": "mac-studio-m5-ultra-256gb-4tb",
+      "name": "Mac Studio M5 Ultra 256GB",
+      "service_type": "dedicated",
+      "hardware": {
+        "family": "mac-studio",
+        "chip": "Apple M5 Ultra",
+        "ram_gb": 256,
+        "storage_gb": 4000
+      },
+      "locations": [
+        {
+          "country": "US"
+        }
+      ],
+      "access": {
+        "ssh": true
+      },
+      "prices": [
+        {
+          "amount": 3.5,
+          "currency": "USD",
+          "period": "hour",
+          "note": "Dedicated Mac Studio rental by inquiry. Exact hardware, storage and availability are confirmed with the quote."
+        },
+        {
+          "amount": 2171.75,
+          "currency": "USD",
+          "period": "month",
+          "min_term_months": 1,
+          "note": "Monthly reservation: hourly rate × 730 hours, less 15%. 4TB SSD baseline; larger SSD capacity and any applicable taxes or additional charges are confirmed in the quote."
+        }
+      ],
+      "stock": "unknown",
+      "url": "https://mac-studio.hoflings.com/#request"
+    },
+    {
+      "id": "mac-studio-m5-ultra-512gb-4tb",
+      "name": "Mac Studio M5 Ultra 512GB",
+      "service_type": "dedicated",
+      "hardware": {
+        "family": "mac-studio",
+        "chip": "Apple M5 Ultra",
+        "ram_gb": 512,
+        "storage_gb": 4000
+      },
+      "locations": [
+        {
+          "country": "US"
+        }
+      ],
+      "access": {
+        "ssh": true
+      },
+      "prices": [
+        {
+          "amount": 7.0,
+          "currency": "USD",
+          "period": "hour",
+          "note": "Dedicated Mac Studio rental by inquiry. Exact hardware, storage and availability are confirmed with the quote."
+        },
+        {
+          "amount": 4343.5,
+          "currency": "USD",
+          "period": "month",
+          "min_term_months": 1,
+          "note": "Monthly reservation: hourly rate × 730 hours, less 15%. 4TB SSD baseline; larger SSD capacity and any applicable taxes or additional charges are confirmed in the quote."
+        }
+      ],
+      "stock": "unknown",
+      "url": "https://mac-studio.hoflings.com/#request"
+    }
+  ]
+}
