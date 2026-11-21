@@ -1080,11 +1080,17 @@ h1, h2, h3, h4, h5, p, li, dt, dd, label, blockquote, figcaption,
 .admin__settings h2 { font-size: 26px; margin: 0 0 18px; }
 .admin__settings > p { font-size: 14px; line-height: 1.8; color: var(--muted); }
 .admin__settings form > label:not(.admin__settings-check) { display: block; font-size: 14px; margin: 22px 0 9px; }
-.admin__settings form > input { width: 100%; padding: 14px; font: inherit; border-radius: 8px; border: 1px solid var(--line-hard); background: var(--void); color: var(--text); }
+.admin__settings form > input, .admin__settings form > select { width: 100%; padding: 14px; font: inherit; border-radius: 8px; border: 1px solid var(--line-hard); background: var(--void); color: var(--text); }
 .admin__settings-help { color: var(--muted); font-size: 12px; line-height: 1.8; margin: 10px 0 20px; }
 .admin__settings-check { display: flex; align-items: center; gap: 10px; margin: 26px 0; font-size: 14px; }
 .admin__settings-check input { width: 18px; height: 18px; accent-color: var(--signal); }
 .admin__settings .admin__replynotice { margin: 18px 0; }
+.admin__keycard { display: grid; gap: 10px; padding: 20px; margin: 22px 0; border: 1px solid var(--line-hard); border-radius: 10px; background: var(--hull-2); }
+.admin__keycard.is-saved { border-color: var(--live); }
+.admin__keycard.is-saved > strong { color: var(--live); }
+.admin__keycard p { font-size: 14px; line-height: 1.7; color: var(--muted); margin: 0; }
+.admin__keycard small { color: var(--muted); font-size: 12px; }
+.admin__keycard button { justify-self: start; margin-top: 4px; }
 .admin__settings-link { background: none; border: 0; padding: 8px; color: var(--muted); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .admin__replycomposer { animation: none; } }
 .admin__who b { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }

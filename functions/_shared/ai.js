@@ -48,12 +48,38 @@ export async function handleAdminAiSettings(request, env) {
       body: { p_api_key: key || null, p_model: model, p_enabled: body.enabled, p_actor: admin.email },
     });
     if (!result.ok) return json({ error: 'Could not save AI settings. The key was not returned to the browser.' }, 503);
-    const data = result.data || {};
-    return json({ ok: true, configured: Boolean(data.configured), model: data.model || model, enabled: data.enabled !== false, updated_at: data.updated_at || null }, 200, { 'cache-control': 'no-store' });
-  } catch { return json({ error: 'Could not save AI settings. Please try again.' }, 503); }
+    const saved = await getConfig(env);
+    if (!saved) return json({ error: 'The save was accepted, but storage could not be rechecked. Use Recheck saved status before entering the key again.' }, 503);
+    return json({ ok: true, storage_verified: true, ...publicConfig(saved) }, 200, { 'cache-control': 'no-store' });
+  } catch { return json({ error: 'Could not confirm the save. Use Recheck saved status before entering the key again.' }, 503); }
+}
+
+export async function handleAdminAiModels(request, env) {
+  const admin = await requireAdmin(env, request);
+  if (!admin) return json({ error: 'Not signed in.' }, 401);
+  if (request.method !== 'GET') return json({ error: 'Method not allowed.' }, 405);
+  const config = await getConfig(env);
+  if (!config?.api_key) return json({ error: 'Save an OpenAI API key before loading models.' }, 422);
+  try {
+    const response = await fetch('https://api.openai.com/v1/models', {
+      headers: { authorization: `Bearer ${config.api_key}` }, signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) return json({ error: response.status === 401 || response.status === 403
+      ? 'OpenAI rejected the saved key. Check its permissions or replace it.'
+      : 'OpenAI could not list models. Try refreshing shortly.' }, 502);
+    const result = await response.json();
+    if (!Array.isArray(result.data)) throw new Error('Invalid model list');
+    const models = [...new Set(result.data.map(item => item.id).filter(id => typeof id === 'string' && MODEL.test(id)))].sort();
+    return json({ ok: true, models });
+  } catch { return json({ error: 'Could not load models from OpenAI. Try refreshing shortly.' }, 502); }
 }
 
 export async function handleAdminAiReply(request, env) {
+  try { return await generateReply(request, env); }
+  catch { return json({ error: 'The server could not prepare the AI request. Your instructions have been kept. Please retry or check AI settings.' }, 500); }
+}
+
+async function generateReply(request, env) {
   const admin = await requireAdmin(env, request);
   if (!admin) return json({ error: 'Not signed in.' }, 401);
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405, { allow: 'POST' });
@@ -77,7 +103,7 @@ export async function handleAdminAiReply(request, env) {
   const context = {
     customer_name: contact.name, company: contact.company, inquiry: contact.message,
     requested_role: contact.role, region_given_by_customer: contact.region,
-    recent_sent_replies: (contact.replies || []).filter(reply => reply.status === 'sent').slice(0, 3).map(reply => ({ subject: reply.subject, body: String(reply.body || '').slice(0, 4000) })),
+    recent_sent_replies: (Array.isArray(contact.replies) ? contact.replies : []).filter(reply => reply.status === 'sent').slice(0, 3).map(reply => ({ subject: reply.subject, body: String(reply.body || '').slice(0, 4000) })),
   };
   let response;
   try {

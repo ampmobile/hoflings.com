@@ -17,7 +17,7 @@ export async function api(path, { method = 'GET', body } = {}) {
     try {
       data = await res.json();
     } catch {
-      data = null;
+      data = { error: `The server returned an unexpected response (HTTP ${res.status}). Please retry. Your input has been kept.` };
     }
     return { ok: res.ok, status: res.status, data };
   } catch (err) {

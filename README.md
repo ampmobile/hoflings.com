@@ -142,6 +142,9 @@ After signing in at `/auth`, use `/admin#settings` to save or replace an OpenAI 
 (default `gpt-5-mini`), or disable AI drafting. The key is encrypted in Supabase Vault. A dedicated private schema holds
 only the Vault secret ID and model settings; service-role-only RPC wrappers let the backend read it. Settings HTTP
 responses return configuration status, never the key. Staff auth/admin pages do not load the public tracking scripts.
+The Settings key field is intentionally cleared after saving; it is only for replacements. A status card shows whether
+the encrypted key is on file and the last settings save time. Each save is read back from Vault before success is
+reported, and Recheck saved status verifies persistence without revealing the key or making a billable OpenAI call.
 
 `POST /admin/ai-reply` authenticates the admin, loads the selected inquiry and up to three recent sent replies, and calls
 the OpenAI Responses API with `store: false`. It does not include visitor IP/device/geolocation metadata and never sends

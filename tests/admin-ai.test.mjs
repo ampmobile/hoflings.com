@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleAdminAiSettings, handleAdminAiReply } from '../functions/_shared/ai.js';
+import { handleAdminAiSettings, handleAdminAiReply, handleAdminAiModels } from '../functions/_shared/ai.js';
 
 const KEY = 'sk-synthetic-only-not-a-real-api-key';
 const ID = '93a8aa87-ae5d-48f2-95a5-8e8af0174519';
@@ -21,7 +21,7 @@ async function fixture(options, run) {
     const body = request.body ? JSON.parse(request.body) : null;
     calls.push({ url: url.href, request, body });
     if (url.pathname === '/auth/v1/user') return Response.json({ email: admin });
-    if (url.pathname.endsWith('/get_openai_reply_config')) return Response.json(config);
+    if (url.pathname.endsWith('/get_openai_reply_config')) return options?.readbackFailure ? Response.json({ error: 'temporary read failure' }, { status: 503 }) : Response.json(config);
     if (url.pathname.endsWith('/save_openai_reply_config')) {
       assert.equal(body.p_actor, admin);
       if (body.p_api_key) config.api_key = body.p_api_key;
@@ -35,6 +35,10 @@ async function fixture(options, run) {
       replies: [{ status: 'sent', subject: 'Previous message', body: 'We will confirm availability.' }],
     }]);
     if (url.hostname === 'api.openai.com') {
+      if (url.pathname === '/v1/models') {
+        if (options?.providerError) return Response.json({ error: { message: KEY } }, { status: options.providerError });
+        return Response.json({ data: [{ id: 'gpt-test-text' }, { id: 'image-test' }, { id: 'gpt-test-text' }] });
+      }
       assert.equal(url.pathname, '/v1/responses');
       assert.equal(request.headers.authorization, `Bearer ${config.api_key}`);
       if (options?.providerError) return Response.json({ error: { message: `Do not leak ${KEY}` } }, { status: options.providerError });
@@ -55,7 +59,9 @@ test('settings returns key status only; saved credentials are never echoed', asy
     assert.equal(JSON.parse(text).configured, true);
     const saved = await handleAdminAiSettings(req('/admin/ai-settings', { api_key: KEY, model: 'gpt-5-mini', enabled: true }), env);
     assert.equal(saved.status, 200);
-    assert.doesNotMatch(await saved.text(), /sk-synthetic/);
+    const savedText = await saved.text();
+    assert.doesNotMatch(savedText, /sk-synthetic/);
+    assert.equal(JSON.parse(savedText).storage_verified, true);
     assert.ok(calls.some(c => c.body?.p_api_key === KEY));
   });
 });
@@ -115,5 +121,35 @@ test('blank key preserves saved key, while malformed settings are rejected', asy
     assert.equal(config.api_key, KEY);
     assert.equal(calls.find(c => c.url.endsWith('/save_openai_reply_config')).body.p_api_key, null);
     assert.equal((await handleAdminAiSettings(req('/admin/ai-settings', { api_key: 'invalid key', model: 'gpt-5-mini', enabled: true }), env)).status, 422);
+  });
+});
+
+test('a failed readback does not incorrectly claim that the stored key was lost', async () => {
+  await fixture({ readbackFailure: true }, async ({ env, config }) => {
+    const response = await handleAdminAiSettings(req('/admin/ai-settings', { api_key: KEY, model: 'gpt-5-mini', enabled: true }), env);
+    assert.equal(response.status, 503);
+    const result = await response.json();
+    assert.match(result.error, /save was accepted/);
+    assert.match(result.error, /Recheck saved status/);
+    assert.equal(config.api_key, KEY);
+    assert.doesNotMatch(JSON.stringify(result), /sk-synthetic/);
+  });
+});
+
+ test('model listing is admin-only, includes all account model IDs, and never exposes credentials', async () => {
+  await fixture({}, async ({ env, calls }) => {
+    assert.equal((await handleAdminAiModels(req('/admin/ai-models', undefined, { signed: false }), env)).status, 401);
+    assert.equal(calls.length, 0);
+    const response = await handleAdminAiModels(req('/admin/ai-models'), env);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const body = await response.json();
+    assert.deepEqual(body.models, ['gpt-test-text', 'image-test']);
+    assert.doesNotMatch(JSON.stringify(body), /sk-synthetic/);
+  });
+  await fixture({ providerError: 401 }, async ({ env }) => {
+    const response = await handleAdminAiModels(req('/admin/ai-models'), env);
+    assert.equal(response.status, 502);
+    assert.doesNotMatch(await response.text(), /sk-synthetic/);
   });
 });

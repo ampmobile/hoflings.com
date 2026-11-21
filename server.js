@@ -12,7 +12,7 @@ import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { handleAdminAiSettings, handleAdminAiReply } from './functions/_shared/ai.js';
+import { handleAdminAiSettings, handleAdminAiReply, handleAdminAiModels } from './functions/_shared/ai.js';
 import {
   handleContactCreate,
   handleRentalQuoteCreate,
@@ -125,6 +125,7 @@ const API_ROUTES = {
   '/admin/contacts': handleAdminContacts,
   '/admin/contact-replies': handleAdminContactReply,
   '/admin/ai-settings': handleAdminAiSettings,
+  '/admin/ai-models': handleAdminAiModels,
   '/admin/ai-reply': handleAdminAiReply,
 };
 
