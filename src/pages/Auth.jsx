@@ -12,6 +12,8 @@ import { Icon } from '../components/Icons.jsx';
  *   reset   set a new password from a recovery link
  */
 export default function Auth() {
+  const requestedNext = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
+  const next = requestedNext === '/admin#settings' ? requestedNext : '/admin';
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +35,7 @@ export default function Auth() {
     }
 
     api('/auth/session').then(({ data }) => {
-      if (data?.authenticated) window.location.replace('/admin');
+      if (data?.authenticated) window.location.replace(next);
     });
   }, []);
 
@@ -47,7 +49,7 @@ export default function Auth() {
       if (mode === 'signin') {
         const { ok, data } = await api('/auth/login', { method: 'POST', body: { email, password } });
         if (!ok) throw new Error(data?.error || 'Sign in failed.');
-        window.location.replace('/admin');
+        window.location.replace(next);
         return;
       }
 
@@ -55,7 +57,7 @@ export default function Auth() {
         if (password !== confirm) throw new Error('Those passwords do not match.');
         const { ok, data } = await api('/auth/signup', { method: 'POST', body: { email, password } });
         if (!ok) throw new Error(data?.error || 'Could not create the account.');
-        window.location.replace('/admin');
+        window.location.replace(next);
         return;
       }
 

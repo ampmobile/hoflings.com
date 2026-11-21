@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api.js';
+import AiSettings from '../components/AiSettings.jsx';
 
 const STATUSES = [
   { id: 'new', label: 'New' },
@@ -124,6 +125,19 @@ export default function Admin() {
   const [replying, setReplying] = useState(null);
   const [drafts, setDrafts] = useState({});
   const [replyStates, setReplyStates] = useState({});
+  const [tab, setTab] = useState(() => typeof window !== 'undefined' && window.location.hash === '#settings' ? 'settings' : 'enquiries');
+  const [aiOriginals, setAiOriginals] = useState({});
+
+  useEffect(() => {
+    const syncTab = () => setTab(window.location.hash === '#settings' ? 'settings' : 'enquiries');
+    window.addEventListener('hashchange', syncTab);
+    return () => window.removeEventListener('hashchange', syncTab);
+  }, []);
+
+  const showTab = value => {
+    setTab(value);
+    window.history.replaceState(null, '', value === 'settings' ? '/admin#settings' : '/admin');
+  };
 
   const startReply = (contact) => {
     setReplyStates(current => current[contact.id]?.notice ? { ...current, [contact.id]: {} } : current);
@@ -134,11 +148,42 @@ export default function Admin() {
     setReplying(current => current === contact.id ? null : contact.id);
   };
 
-  const editDraft = (id, key, value) => setDrafts(current => ({ ...current, [id]: { ...current[id], [key]: value } }));
+  const editDraft = (id, key, value) => {
+    setDrafts(current => ({ ...current, [id]: { ...current[id], [key]: value } }));
+    if (key === 'body') setAiOriginals(current => { const next = { ...current }; delete next[id]; return next; });
+  };
+
+  const generateReply = async contact => {
+    const draft = drafts[contact.id];
+    if (!draft || replyStates[contact.id]?.busy || replyStates[contact.id]?.generating || replyStates[contact.id]?.pending) return;
+    if (!draft.body.trim()) {
+      setReplyStates(current => ({ ...current, [contact.id]: { error: 'Type your instructions in Your reply first.' } }));
+      return;
+    }
+    const prompt = draft.body;
+    setReplyStates(current => ({ ...current, [contact.id]: { generating: true } }));
+    const { ok, data } = await api('/admin/ai-reply', { method: 'POST', body: { contact_id: contact.id, prompt } });
+    if (!ok || !data?.ok || typeof data.reply !== 'string') {
+      setReplyStates(current => ({ ...current, [contact.id]: { error: data?.error || 'Could not generate a reply. Your instructions have been kept.' } }));
+      return;
+    }
+    setDrafts(current => current[contact.id]?.request_id === draft.request_id
+      ? { ...current, [contact.id]: { ...current[contact.id], body: data.reply } } : current);
+    setAiOriginals(current => ({ ...current, [contact.id]: prompt }));
+    setReplyStates(current => ({ ...current, [contact.id]: { notice: 'AI draft generated. Review it before clicking Send reply.' } }));
+  };
+
+  const undoAiReply = id => {
+    const original = aiOriginals[id];
+    if (original === undefined) return;
+    setDrafts(current => ({ ...current, [id]: { ...current[id], body: original } }));
+    setAiOriginals(current => { const next = { ...current }; delete next[id]; return next; });
+    setReplyStates(current => ({ ...current, [id]: {} }));
+  };
 
   const sendReply = async (event, contact) => {
     event.preventDefault();
-    if (replyStates[contact.id]?.busy) return;
+    if (replyStates[contact.id]?.busy || replyStates[contact.id]?.generating) return;
     const draft = drafts[contact.id];
     if (!draft) return;
     setReplyStates(current => ({ ...current, [contact.id]: { busy: true } }));
@@ -152,6 +197,7 @@ export default function Admin() {
       } : c));
       setReplyStates(current => ({ ...current, [contact.id]: { notice: data.notice || 'Reply accepted by SendGrid.' } }));
       setDrafts(current => { const next = { ...current }; delete next[contact.id]; return next; });
+      setAiOriginals(current => { const next = { ...current }; delete next[contact.id]; return next; });
       setReplying(current => current === contact.id ? null : current);
       return;
     }
@@ -166,7 +212,7 @@ export default function Admin() {
   const load = async () => {
     const { ok, data } = await api('/admin/contacts');
     if (data?.error === 'Not signed in.') {
-      window.location.replace('/auth');
+      window.location.replace(`/auth?next=${encodeURIComponent(window.location.hash === '#settings' ? '/admin#settings' : '/admin')}`);
       return;
     }
     if (!ok) {
@@ -281,23 +327,31 @@ export default function Admin() {
         <div className="admin__bar">
           <div>
             <p className="kicker">Operations console</p>
-            <h1 className="admin__title">Enquiries</h1>
+            <h1 className="admin__title">{tab === 'settings' ? 'Settings' : 'Enquiries'}</h1>
             <p className="lede admin__lede">
               {counts.all} total · {counts.new} new · {counts.contacted} contacted · {counts.archived} archived
             </p>
           </div>
           <div className="admin__actions">
+            {tab === 'enquiries' && <>
             <button className="btn btn--line" type="button" onClick={load}>
               Refresh
             </button>
             <button className="btn btn--line" type="button" onClick={exportCsv}>
               Export CSV
             </button>
+            </>}
             <button className="btn btn--line" type="button" onClick={logout}>
               Sign out
             </button>
           </div>
         </div>
+
+        <div className="admin__sections" role="tablist" aria-label="Admin sections">
+          <button type="button" role="tab" aria-selected={tab === 'enquiries'} className={`admin__tab${tab === 'enquiries' ? ' is-on' : ''}`} onClick={() => showTab('enquiries')}>Enquiries</button>
+          <button type="button" role="tab" aria-selected={tab === 'settings'} className={`admin__tab${tab === 'settings' ? ' is-on' : ''}`} onClick={() => showTab('settings')}>Settings</button>
+        </div>
+        {tab === 'settings' ? <AiSettings /> : <>
 
         <div className="admin__filters">
           <div className="admin__tabs" role="tablist" aria-label="Filter enquiries">
@@ -410,7 +464,7 @@ export default function Admin() {
                           aria-expanded={replying === c.id} aria-controls={`reply-${c.id}`}>
                           {replying === c.id ? 'Close reply' : 'Reply'}
                         </button>
-                        <button className="btn btn--line admin__del" type="button" disabled={replyStates[c.id]?.busy} onClick={() => remove(c.id)}>
+                        <button className="btn btn--line admin__del" type="button" disabled={replyStates[c.id]?.busy || replyStates[c.id]?.generating} onClick={() => remove(c.id)}>
                           Delete
                         </button>
                       </div>
@@ -422,19 +476,24 @@ export default function Admin() {
                         <p className="admin__replyaddresses">From <b>support@hoflings.com</b> · To <b>{c.email}</b></p>
                         <label htmlFor={`reply-subject-${c.id}`}>Subject</label>
                         <input id={`reply-subject-${c.id}`} required maxLength={200} value={drafts[c.id].subject}
-                          disabled={replyStates[c.id]?.busy || replyStates[c.id]?.pending}
+                          disabled={replyStates[c.id]?.busy || replyStates[c.id]?.pending || replyStates[c.id]?.generating}
                           onChange={event => editDraft(c.id, 'subject', event.target.value)} />
                         <label htmlFor={`reply-body-${c.id}`}>Your reply</label>
                         <textarea id={`reply-body-${c.id}`} required maxLength={12000} rows={7} autoFocus
-                          placeholder="Type your reply…" value={drafts[c.id].body}
-                          disabled={replyStates[c.id]?.busy || replyStates[c.id]?.pending}
+                          placeholder="Type your reply, or instructions for AI to turn into a reply…" value={drafts[c.id].body}
+                          disabled={replyStates[c.id]?.busy || replyStates[c.id]?.pending || replyStates[c.id]?.generating}
                           onChange={event => editDraft(c.id, 'body', event.target.value)} />
                         {replyStates[c.id]?.error && <p className="auth__msg auth__msg--bad" role="alert">{replyStates[c.id].error}</p>}
                         <div className="admin__replyactions">
-                          <button className="btn btn--fill" type="submit" disabled={replyStates[c.id]?.busy}>
+                          <button className="btn btn--fill" type="submit" disabled={replyStates[c.id]?.busy || replyStates[c.id]?.generating}>
                             {replyStates[c.id]?.busy ? 'Sending…' : replyStates[c.id]?.pending ? 'Check send status' : 'Send reply'}
                           </button>
-                          <button className="btn btn--line" type="button" disabled={replyStates[c.id]?.busy} onClick={() => setReplying(null)}>Close</button>
+                          <button className="btn btn--line" type="button" disabled={replyStates[c.id]?.busy || replyStates[c.id]?.pending || replyStates[c.id]?.generating || !drafts[c.id].body.trim()} onClick={() => generateReply(c)}>
+                            {replyStates[c.id]?.generating ? 'Generating…' : 'Generate with AI'}
+                          </button>
+                          {aiOriginals[c.id] !== undefined && <button className="btn btn--line" type="button" disabled={replyStates[c.id]?.busy || replyStates[c.id]?.generating || replyStates[c.id]?.pending} onClick={() => undoAiReply(c.id)}>Undo AI replacement</button>}
+                          <button className="btn btn--line" type="button" disabled={replyStates[c.id]?.busy || replyStates[c.id]?.generating} onClick={() => setReplying(null)}>Close</button>
+                          <button className="admin__settings-link" type="button" disabled={replyStates[c.id]?.busy || replyStates[c.id]?.generating} onClick={() => showTab('settings')}>AI settings</button>
                           <span>Sent replies appear in this inquiry’s history.</span>
                         </div>
                       </form>
@@ -445,6 +504,7 @@ export default function Admin() {
             );
           })}
         </ul>
+        </>}
       </div>
     </section>
   );

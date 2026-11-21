@@ -140,6 +140,12 @@ export default function Privacy() {
             information through Google Analytics and, on the Mac Studio site, Google Ads tags managed through Tag Manager.
           </li>
           <li>
+            <b>AI reply drafting.</b> When an administrator chooses Generate with AI, OpenAI receives the enquiry text,
+            relevant recent replies and the administrator&rsquo;s instructions to prepare a draft. Visitor IP, browser
+            and geolocation metadata are not included in that drafting context. We request that the API response is not
+            stored as a retrievable response. A person reviews and sends the reply separately.
+          </li>
+          <li>
             <b>Professional advisers and authorities.</b> Our counsel, accountants and auditors, and regulators or law
             enforcement where we are legally required to disclose.
           </li>

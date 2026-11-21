@@ -136,6 +136,18 @@ acceptance marks the enquiry contacted and appears in reply history; it is not a
 are held for review instead of automatically retried. RLS with no public/authenticated grants intentionally keeps
 reply bodies available only through the admin API. No inbound email synchronization is implemented.
 
+## AI reply drafts
+
+After signing in at `/auth`, use `/admin#settings` to save or replace an OpenAI API key, select a Responses API model
+(default `gpt-5-mini`), or disable AI drafting. The key is encrypted in Supabase Vault. A dedicated private schema holds
+only the Vault secret ID and model settings; service-role-only RPC wrappers let the backend read it. Settings HTTP
+responses return configuration status, never the key. Staff auth/admin pages do not load the public tracking scripts.
+
+`POST /admin/ai-reply` authenticates the admin, loads the selected inquiry and up to three recent sent replies, and calls
+the OpenAI Responses API with `store: false`. It does not include visitor IP/device/geolocation metadata and never sends
+email. Generate with AI replaces the textarea instructions with the generated body; failures preserve the original
+instructions and Undo restores them after a successful replacement. Sending remains a separate explicit SendGrid action.
+
 Password reset relies on Supabase's built-in email service, which on the free
 plan only sends to project members and is heavily rate-limited. Configure a
 custom SMTP provider for Supabase Auth before relying on `/auth/forgot`.
