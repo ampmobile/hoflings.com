@@ -2,19 +2,24 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- Google Tag Manager: enabled only on the production Mac Studio hostname. -->
+<!-- Google Tag Manager and GA4: production Mac Studio hostname only. -->
 <script>
 (function (w, d, s, l, i) {
   if (w.location.hostname !== 'mac-studio.hoflings.com') return;
   w[l] = w[l] || [];
   w.gtag = w.gtag || function () { w[l].push(arguments); };
   w.gtag('js', new Date());
+  w.gtag('config', 'G-3WWJK4WL51');
   w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
   var first = d.getElementsByTagName(s)[0];
   var tag = d.createElement(s);
   tag.async = true;
   tag.src = 'https://www.googletagmanager.com/gtm.js?id=' + i;
   first.parentNode.insertBefore(tag, first);
+  var analytics = d.createElement(s);
+  analytics.async = true;
+  analytics.src = 'https://www.googletagmanager.com/gtag/js?id=G-3WWJK4WL51';
+  first.parentNode.insertBefore(analytics, first);
 })(window, document, 'script', 'dataLayer', 'GTM-KZRMP3JV');
 </script>
 <title>Mac Studio M5 Ultra Rental | Up to 512GB RAM | Hoflings</title>
