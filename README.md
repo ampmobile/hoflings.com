@@ -162,3 +162,9 @@ custom SMTP provider for Supabase Auth before relying on `/auth/forgot`.
 Authenticator setup secrets are shown only during enrollment, are never logged, and responses are not cached. Abandoned unverified enrollments can be restarted; verified factors cannot be removed through this endpoint. If an administrator loses access to their authenticator, the project owner must verify their identity and reset that user's MFA factor through Supabase Auth administration. Password reset alone does not bypass MFA.
 
 Both main-site inquiries and Mac Studio quote requests notify `support@hoflings.com` through the existing SendGrid integration, alongside configured notification recipients, with duplicate addresses removed.
+
+### Lead conversion measurement
+
+The Mac Studio rental form fires Google Ads conversion `AW-18587735600/7l-OCOzBzbwdELCsqZ9F` only after `/rental-quotes` returns a successful saved inquiry ID. The ID is sent as the conversion transaction ID for deduplication. Honeypot responses, form clicks, failed saves and validation failures are not measured. The existing Ads conversion action uses the account-default Submit lead forms goal, primary optimization and One conversion per ad interaction.
+
+Both public forms also send GA4 `generate_lead` to `G-3WWJK4WL51`, without names, email addresses, phone numbers or message contents. Google Ads initialization and conversion events remain restricted to `mac-studio.hoflings.com`. Local previews never load production tracking. Ad blockers and browser privacy controls may prevent browser-side measurement; Google Ads may take up to 48 hours to show newly recorded conversions.

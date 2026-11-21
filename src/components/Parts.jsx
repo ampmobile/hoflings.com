@@ -194,11 +194,12 @@ export function ContactForm() {
 
       const data = await res.json().catch(() => null);
 
-      if (!res.ok) {
+      if (!res.ok || !data?.ok) {
         if (data && data.fields) setFieldErrors(data.fields);
         throw new Error((data && data.error) || 'We could not send that. Please try again.');
       }
 
+      window.HoflingsTrackLead?.(data.id, 'contact_inquiry');
       setState('sent');
       form.reset();
     } catch (err) {

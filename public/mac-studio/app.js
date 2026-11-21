@@ -38,6 +38,7 @@ document.querySelector('#request-form').addEventListener('submit', async e => {
       }
       throw new Error(result.fields ? Object.values(result.fields).join(' ') : result.error || 'We could not send your request. Please try again.');
     }
+    window.HoflingsTrackLead?.(result.id, 'rental_quote');
     form.reset();
     status.textContent = 'Your rental request has been received. The Hoflings team will contact you to confirm availability, hardware and pricing.';
     button.textContent = 'Request received ✓';
