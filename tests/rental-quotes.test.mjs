@@ -6,6 +6,11 @@ import { onRequest } from '../functions/_middleware.js';
 const payload = {
   name: 'Rental Test', email: 'rental-test@example.com', configuration: '512GB',
   period: 'Hourly', workload: 'Model evaluation, 4TB SSD, preferred dates to be confirmed.',
+  lead_context: {
+    first_touch: { landing_page: 'https://mac-studio.hoflings.com/', utm: { source: 'google', medium: 'cpc' } },
+    last_touch: { landing_page: 'https://mac-studio.hoflings.com/', click_ids: { gclid: 'synthetic-test-click' } },
+    browser: { timezone: 'America/New_York', language: 'en-US' },
+  },
 };
 const env = {
   SUPABASE_URL: 'https://database.example.com', SUPABASE_SERVICE_ROLE_KEY: 'test-only',
@@ -37,6 +42,8 @@ test('rental requests use the existing contacts storage and both notification em
     assert.equal(insert.body.source, 'mac-studio.hoflings.com');
     assert.match(insert.body.message, /Configuration: 512GB\nRental period: Hourly/);
     assert.match(insert.body.message, /4TB SSD/);
+    assert.equal(insert.body.attribution.last_touch.channel, 'Google Ads');
+    assert.equal(insert.body.visitor_context.browser_timezone, 'America/New_York');
     assert.equal(insert.options.headers.apikey, 'test-only');
     const emails = calls.filter(c => c.url.includes('sendgrid'));
     assert.equal(emails.length, 2);

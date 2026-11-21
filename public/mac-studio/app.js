@@ -14,6 +14,7 @@ document.querySelector('#request-form').addEventListener('submit', async e => {
   const button = form.querySelector('[type="submit"]');
   const status = document.querySelector('#form-status');
   const values = Object.fromEntries(new FormData(form));
+  values.lead_context = window.HoflingsLeadContext?.get() || {};
   form.dataset.submitting = 'true';
   form.setAttribute('aria-busy', 'true');
   button.disabled = true;

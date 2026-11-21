@@ -80,6 +80,19 @@ Hoflings Ltd, 300 Main Street, Madison, NJ 07940. `support@hoflings.com`
 
 ## Admin backend
 
+New enquiries on both public Hoflings and Mac Studio forms include first-visit and latest campaign/external-referral
+attribution, sanitized landing/referrer URLs, UTM tags and click identifiers, Cloudflare IP geolocation, and browser/device
+context. `public/lead-context.js` retains a 30-day attribution window across Hoflings subdomains; the shared backend
+validates those fields and independently supplies IP geolocation. These are advisory traffic records, not authorization
+inputs. The `/admin` inbox and CSV export display the metadata stored in `contacts.attribution` and
+`contacts.visitor_context`; historical inquiries retain unknown referral/location data, while existing user agents can
+still identify their browser/device. The migration is kept under `supabase/migrations/`.
+
+GA4 property `G-3WWJK4WL51` is loaded on public `hoflings.com` / `www.hoflings.com` pages by `public/analytics.js` and
+on `mac-studio.hoflings.com` by its hostname-scoped head snippet. GTM `GTM-KZRMP3JV` remains Mac Studio-only. Neither
+script is added to the staff auth/admin shells. Version query strings on shared public scripts should change whenever
+those scripts change.
+
 The site ships a small backend that runs on both hosts (Cloudflare Pages Functions
 and the Node host) from one shared core, `functions/_shared/core.js`. There are no
 new npm dependencies — Supabase and SendGrid are called with plain `fetch`.

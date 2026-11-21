@@ -17,6 +17,7 @@ export async function onRequest(context) {
   }
   // Let the existing Pages Functions backend handle rental submissions.
   if (url.pathname === '/rental-quotes') return context.next();
+  if (url.pathname === '/lead-context.js') return context.env.ASSETS.fetch(context.request);
   if (url.pathname === '/.well-known/cloudmac.json') {
     url.pathname = '/mac-studio/cloudmac.json';
     const asset = await context.env.ASSETS.fetch(new Request(url, context.request));

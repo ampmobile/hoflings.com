@@ -178,6 +178,7 @@ export function ContactForm() {
       message: d.get('message'),
       website: d.get('website'), // honeypot — humans never see this
       source: window.location.href,
+      lead_context: window.HoflingsLeadContext?.get() || {},
     };
 
     setState('sending');
@@ -332,8 +333,8 @@ export function ContactForm() {
         </svg>
       </button>
       <p className="fnote">
-        Your details go straight to our enquiries inbox so we can reply, and a copy is emailed back to you. We do not sell or
-        share them — see the <a href="/privacy">privacy notice</a>.
+        Your details go straight to our enquiries inbox so we can reply, and a copy is emailed back to you.
+        Referral and technical details are included with your enquiry — see the <a href="/privacy">privacy notice</a>.
       </p>
     </form>
   );

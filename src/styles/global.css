@@ -1041,6 +1041,21 @@ h1, h2, h3, h4, h5, p, li, dt, dd, label, blockquote, figcaption,
 .admin__pip--contacted { background: var(--live); }
 .admin__pip--archived { background: var(--faint); }
 .admin__who { display: grid; gap: 2px; min-width: 0; }
+.admin__row { grid-template-columns: 10px minmax(0, 1.2fr) minmax(0, .7fr) minmax(0, 1.3fr) auto; }
+.admin__origin { display: grid; gap: 4px; min-width: 0; font-size: 12px; }
+.admin__origin b { color: var(--signal); font-weight: 500; }
+.admin__origin > span { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.admin__context { margin: 20px 0; padding: 20px; border: 1px solid var(--line); border-radius: 10px; }
+.admin__context h3 { font-size: 18px; margin: 0 0 14px; }
+.admin__contextnote { color: var(--muted); font-size: 12px; line-height: 1.7; max-width: 80ch; margin-bottom: 22px; }
+.admin__context .admin__grid { margin-bottom: 0; }
+.admin__context .admin__grid span { overflow-wrap: anywhere; }
+.admin__touch { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 20px; }
+.admin__touch h3 { font-size: 15px; }
+.admin__touch h3 > span { color: var(--signal); }
+.admin__agent { margin-top: 22px; color: var(--muted); font-size: 12px; }
+.admin__agent summary { cursor: pointer; }
+.admin__agent p { overflow-wrap: anywhere; margin-top: 12px; }
 .admin__who b { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
 .admin__who em {
   font-style: normal; font-size: 12.5px; color: var(--muted);
@@ -1081,7 +1096,7 @@ h1, h2, h3, h4, h5, p, li, dt, dd, label, blockquote, figcaption,
 
 @media (max-width: 720px) {
   .admin__row { grid-template-columns: 10px minmax(0, 1fr); row-gap: 6px; }
-  .admin__role, .admin__when { grid-column: 2; }
+  .admin__role, .admin__when, .admin__origin { grid-column: 2; }
   .admin__bar, .admin__filters { flex-direction: column; align-items: stretch; }
   .admin__search { max-width: none; }
 }

@@ -9,7 +9,7 @@ export default function Privacy() {
       kicker="Legal"
       title="Privacy policy."
       lede="What we collect, why we collect it, who we share it with, and how to get it back or have it deleted. Written to be read, not to be survived."
-      updated="12 November 2026"
+      updated="21 November 2026"
     >
       <LegalSection id="who-we-are" n="01" title="Who we are">
         <p>
@@ -38,21 +38,26 @@ export default function Privacy() {
 
         <h3>When you visit this site</h3>
         <p>
-          This website is a static marketing site. It does not run advertising trackers, does not set advertising cookies,
-          and does not build a behavioural profile of you. The only thing the site collects is what you type into the
-          enquiry form on the <a href="/contact">contact page</a>, and that only because you asked us to come back to
-          you.
+          Our public websites at hoflings.com and mac-studio.hoflings.com use Google Analytics to understand visits and
+          website use. The Mac Studio site also uses Google Tag Manager for Google Ads. When you send an enquiry, we
+          collect the information you enter together with referral and technical details that help our team understand
+          the request and where it came from.
         </p>
         <p>Specifically, when you send an enquiry we collect:</p>
         <ul>
           <li>Your name, work email, company and phone number, if you give one.</li>
           <li>The role you need filled, the region you operate in and your fleet or headcount range.</li>
           <li>The message you write.</li>
+          <li>For Mac Studio requests, your selected memory configuration, rental period, storage needs and preferred dates.</li>
+          <li>The first recorded landing page and latest campaign or external referral, including UTM tags and advertising click identifiers when present.</li>
+          <li>Your IP address and approximate country, region, city, postal code, time zone and network information supplied by Cloudflare.</li>
+          <li>Browser and operating-system information, device type, browser time zone, language, screen size and viewport size when available.</li>
         </ul>
         <p>
-          That enquiry is stored in our own database, reachable only by the people who answer it, and it is used for one
-          thing: getting back to you about the roles you asked about. We email it to our own inbox, and we send you a copy
-          so you have it too. We do not sell it, we do not share it with advertisers or data brokers, and we do not add you
+          That enquiry is stored in our own database, reachable only by the people who answer it, and it is used for
+          getting back to you about the services you asked about and understanding which website or campaign generated
+          the request. We email it to our own inbox, and we send you a copy
+          so you have it too. We do not intentionally send your enquiry message or form contact details to analytics or advertising tags, and we do not add you
           to a mailing list because you filled in a form. We delete enquiries that have gone cold once they are no longer
           needed to answer you. If you want yours removed, ask and it is gone — see below.
         </p>
@@ -93,6 +98,7 @@ export default function Privacy() {
             Motor Carrier Safety Regulation recordkeeping.
           </li>
           <li>To communicate with you about your application, your service and your account.</li>
+          <li>To understand referral sources, measure website and advertising performance, and provide context for enquiries.</li>
           <li>To invoice, collect and keep financial records.</li>
           <li>To detect fraud, secure our systems and enforce our agreements.</li>
           <li>
@@ -105,7 +111,8 @@ export default function Privacy() {
           without affecting the service you have engaged us for.
         </p>
         <p>
-          We do not sell personal information. We do not share it for advertising. We do not use it for automated decisions
+          We do not sell enquiry records. Analytics and advertising technologies may process visit and device information
+          as described below. We do not use enquiry attribution or device details for automated decisions
           that produce legal or similarly significant effects without a human reviewing the outcome.
         </p>
       </LegalSection>
@@ -127,6 +134,10 @@ export default function Privacy() {
             instructions under written data processing terms. For enquiries sent through this site, that means our hosting
             provider Cloudflare, our database provider Supabase, and our email provider SendGrid — each receives only what is
             needed to store the enquiry or deliver the email.
+          </li>
+          <li>
+            <b>Website analytics and advertising providers.</b> Google processes visit, device, cookie and campaign
+            information through Google Analytics and, on the Mac Studio site, Google Ads tags managed through Tag Manager.
           </li>
           <li>
             <b>Professional advisers and authorities.</b> Our counsel, accountants and auditors, and regulators or law
@@ -230,8 +241,17 @@ export default function Privacy() {
 
       <LegalSection id="cookies" n="09" title="Cookies and analytics on this site">
         <p>
-          This site does not set advertising cookies and does not embed third-party advertising or social tracking. The site is
-          served as static files with no behavioural analytics.
+          Google Analytics is used on public Hoflings and Mac Studio pages; Google Ads tags are installed on the Mac
+          Studio site through Tag Manager. These tools may use cookies or similar storage. We also keep first-visit and
+          latest campaign or external-referral details in a Hoflings cookie and browser storage for up to 30 days, shared
+          across Hoflings subdomains where available. On enquiry submission, those details are saved with the enquiry.
+          Referrer and landing-page URLs are stored without arbitrary query strings or fragments; only named campaign
+          parameters and advertising click identifiers are retained separately.
+        </p>
+        <p>
+          You can clear or restrict cookies and browser storage through your browser settings. Referral and location
+          information can be incomplete, and IP geolocation may reflect a VPN or shared network rather than your actual
+          location. We do not request precise GPS coordinates or use canvas or similar device fingerprinting.
         </p>
         <p>
           {HRBRIDGE.name}, which is a separate application at {HRBRIDGE.domain}, has its own cookie notice and privacy

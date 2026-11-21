@@ -12,6 +12,8 @@
  *   ADMIN_EMAIL, CONTACT_TO_EMAIL, PUBLIC_SITE_URL
  */
 
+import { buildLeadMetadata, cleanLeadUrl, parseVisitorAgent } from './lead-metadata.js';
+
 export const SESSION_COOKIE = 'hof_admin';
 export const CONTACT_TABLE = 'contacts';
 
@@ -170,7 +172,7 @@ export function validateContact(input, { requireCompany = true } = {}) {
     region: field(src.region, 120),
     fleet: field(src.fleet, 120),
     message: typeof src.message === 'string' ? src.message.trim().slice(0, 4000) : '',
-    source: field(src.source, 200),
+    source: cleanLeadUrl(src.source) || field(src.source, 200),
   };
 
   const errors = {};
@@ -203,10 +205,11 @@ export function validateRentalQuote(input) {
   return result;
 }
 
-export async function insertContact(env, contact, request) {
+export async function insertContact(env, contact, request, leadContext) {
   const row = {
     ...contact,
     user_agent: (request?.headers?.get('user-agent') || '').slice(0, 300),
+    ...buildLeadMetadata(request, leadContext),
   };
   const res = await sb(env, `/rest/v1/${CONTACT_TABLE}`, {
     method: 'POST',
@@ -227,7 +230,13 @@ export async function listContacts(env) {
     { service: true }
   );
   if (!res.ok) return { ok: false, error: res.data?.message || `query failed (${res.status})` };
-  return { ok: true, contacts: Array.isArray(res.data) ? res.data : [] };
+  return { ok: true, contacts: Array.isArray(res.data) ? res.data.map(contact => ({
+    ...contact,
+    visitor_context: {
+      ...(contact.user_agent ? parseVisitorAgent(contact.user_agent) : {}),
+      ...(contact.visitor_context || {}),
+    },
+  })) : [] };
 }
 
 export async function updateContact(env, id, patch) {
@@ -450,7 +459,7 @@ export async function handleContactCreate(request, env, { validate = validateCon
     return json({ error: 'Please check the highlighted fields.', fields: errors }, 422);
   }
 
-  const inserted = await insertContact(env, value, request);
+  const inserted = await insertContact(env, value, request, body?.lead_context);
   if (!inserted.ok) {
     console.error('contact insert failed:', inserted.error);
     return json(
