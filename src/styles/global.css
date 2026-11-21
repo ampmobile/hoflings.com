@@ -1060,7 +1060,10 @@ h1, h2, h3, h4, h5, p, li, dt, dd, label, blockquote, figcaption,
 .admin__replycomposer h3, .admin__replies h3 { font-size: 19px; margin: 0 0 12px; }
 .admin__replycomposer label { display: block; margin: 18px 0 8px; font-size: 13px; color: var(--muted); }
 .admin__replycomposer input, .admin__replycomposer textarea { width: 100%; padding: 13px; border: 1px solid var(--line-hard); border-radius: 8px; background: var(--void); color: var(--text); font: inherit; }
-.admin__replycomposer textarea { resize: vertical; line-height: 1.7; }
+.admin__replycomposer textarea { resize: vertical; line-height: 1.7; height: 240px; min-height: 160px; max-height: 60vh; overflow-y: scroll; scrollbar-gutter: stable; scrollbar-width: auto; scrollbar-color: var(--signal) var(--hull-2); }
+.admin__replycomposer textarea::-webkit-scrollbar { width: 12px; }
+.admin__replycomposer textarea::-webkit-scrollbar-track { background: var(--hull-2); border-radius: 8px; }
+.admin__replycomposer textarea::-webkit-scrollbar-thumb { background: var(--signal); border: 3px solid var(--hull-2); border-radius: 8px; }
 .admin__replycomposer :disabled { opacity: .65; }
 .admin__replyactions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
 .admin__replyactions > span { font-size: 11px; color: var(--muted); }
