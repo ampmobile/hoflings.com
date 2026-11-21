@@ -158,7 +158,8 @@ export default function Admin() {
     if (data?.retryable) setDrafts(current => ({ ...current, [contact.id]: { ...current[contact.id], request_id: crypto.randomUUID() } }));
     setReplyStates(current => ({ ...current, [contact.id]: {
       error: data?.error || 'Could not confirm the send. Check its status before sending another reply.',
-      pending: Boolean(data?.pending) || status === 0 || Boolean(replyStates[contact.id]?.pending && !data?.retryable),
+      pending: Boolean(data?.pending) || status === 0 || !data || (ok && !data?.ok)
+        || Boolean(replyStates[contact.id]?.pending && !data?.retryable),
     } }));
   };
 
