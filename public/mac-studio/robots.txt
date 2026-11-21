@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mac-studio.hoflings.com/sitemap.xml

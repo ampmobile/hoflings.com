@@ -167,6 +167,15 @@ async function sendWebResponse(res, response) {
 
 const server = http.createServer(async (req, res) => {
   const pathname = (req.url || '/').split('?')[0];
+  if (pathname === '/mac-studio' || pathname.startsWith('/mac-studio/')) {
+    const source = new URL(req.url || '/', 'https://hoflings.com');
+    const target = new URL('https://mac-studio.hoflings.com/');
+    const path = source.pathname.slice('/mac-studio'.length) || '/';
+    target.pathname = path === '/index.html' ? '/' : path;
+    target.search = source.search;
+    res.writeHead(301, { Location: target.href, ...SECURITY });
+    return res.end();
+  }
 
   const handler = apiHandler(pathname);
   if (handler) {
