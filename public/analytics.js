@@ -21,8 +21,10 @@
     try {
       window.gtag('event', 'generate_lead', { send_to: property, form_name: form });
       if (rental && form === 'rental_quote') window.gtag('event', 'conversion', {
-        send_to: 'AW-18587735600/7l-OCOzBzbwdELCsqZ9F',
+        send_to: 'AW-18587735600/vo7FCPmc_rwdELCsqZ9F',
         transaction_id: id,
+        value: 1.0,
+        currency: 'USD',
       });
       seen.add(id);
       try { sessionStorage.setItem(storageKey, JSON.stringify(Array.from(seen).slice(-100))); } catch (_) {}

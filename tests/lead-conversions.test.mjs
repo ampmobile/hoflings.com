@@ -24,9 +24,11 @@ test('rental success records the exact Ads destination and GA4 lead once without
   assert.equal(events[0][1], 'generate_lead');
   assert.equal(events[0][2].send_to, 'G-3WWJK4WL51');
   assert.equal(events[1][1], 'conversion');
-  assert.equal(events[1][2].send_to, 'AW-18587735600/7l-OCOzBzbwdELCsqZ9F');
+  assert.equal(events[1][2].send_to, 'AW-18587735600/vo7FCPmc_rwdELCsqZ9F');
   assert.equal(events[1][2].transaction_id, ID);
-  assert.deepEqual(Object.keys(events[1][2]).sort(), ['send_to', 'transaction_id']);
+  assert.equal(events[1][2].value, 1);
+  assert.equal(events[1][2].currency, 'USD');
+  assert.deepEqual(Object.keys(events[1][2]).sort(), ['currency', 'send_to', 'transaction_id', 'value']);
   assert.equal(f.scripts.length, 1);
   f.reload(); assert.equal(f.scripts.length, 1);
 });
